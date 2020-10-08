@@ -71,30 +71,35 @@
 
 </body>
 <script>
-    var quote = "The event also applies to elements with contenteditable enabled, and to any element when designMode is turned on. In the case of contenteditable and designMode, the event target is the editing host. If these properties apply to multiple elements, the editing host is the nearest ancestor element whose parent isn't editable. For elements with type=checkbox or type=radio, the input event should fire whenever a user toggles the control, per the HTML5 specification. However, historically this has not always been the case. Check compatibility, or use the change event instead for elements of these types."
-    var upcoming_words = quote.trim().split(" ")
-    var current_word = upcoming_words.shift()
-    var finished_words = []
-    var inp = document.querySelector("input")
+    let quote = "The event also applies to elements with contenteditable enabled, and to any element when designMode is turned on. In the case of contenteditable and designMode, the event target is the editing host. If these properties apply to multiple elements, the editing host is the nearest ancestor element whose parent isn't editable. For elements with type=checkbox or type=radio, the input event should fire whenever a user toggles the control, per the HTML5 specification. However, historically this has not always been the case. Check compatibility, or use the change event instead for elements of these types."
+
+    // function 
+    let upcoming_words = quote.trim().split(" ")
+    let current_word = upcoming_words.shift()
+    let finished_words = []
+
+    let inp = document.querySelector("input")
     inp.focus()
-    var p = document.querySelector("p.para")
-    var line = document.querySelector("p.short")
-    var h1 = document.querySelector("h1")
+    let p = document.querySelector("p.para")
+    let line = document.querySelector("p.short")
+    let h1 = document.querySelector("h1")
+
     p.innerText = quote;
-    var last_time = Date.now()
+
+    let last_time = Date.now()
     let start = null;
-    var times = []
-    var last_i = 0
-    var last_noticed_i = 0
+    let times = []
+    let last_i = 0
+    let last_noticed_i = 0
     inp.addEventListener("input", function(e){
-        for(var i = 0; i <= e.target.value.length; i++){ 
+        for(let i = 0; i <= e.target.value.length; i++){ 
             if (e.target.value.slice(0, i) === current_word.slice(0, i)){
                 if (i > last_i){
                     last_i = i
                 }
-                var right = "<span class='right'>" + current_word.slice(0, i) + "</span>"
-                var wrong = "<span class='wrong'>" + current_word.slice(i, e.target.value.length) + "</span>"
-                var rest = current_word.slice(e.target.value.length)
+                let right = "<span class='right'>" + current_word.slice(0, i) + "</span>"
+                let wrong = "<span class='wrong'>" + current_word.slice(i, e.target.value.length) + "</span>"
+                let rest = current_word.slice(e.target.value.length)
                 finished_styled = "<span class='dead'>" + finished_words.join(" ") + "</span>"
                 current_styled = "<span class='alive'>" + right + wrong + rest + "</span>"
                 p.innerHTML = finished_styled + " " + current_styled + " " + upcoming_words.join(" ");
@@ -130,14 +135,14 @@
             }
         }
         if (last_noticed_i !== last_i){
-            var current_time = Date.now()
-            var wpm_6letter = Math.round(60/((current_time - last_time)/1000*12))
+            let current_time = Date.now()
+            let wpm_6letter = Math.round(60/((current_time - last_time)/1000*12))
             times.push(wpm_6letter)
-            var total = 0;
-            for(var i = 0; i < times.length; i++) {
+            let total = 0;
+            for(let i = 0; i < times.length; i++) {
                 total += times[i];
             }
-            var avg = total / times.length;
+            let avg = total / times.length;
             h1.innerText = Math.trunc(avg)
             last_time = current_time
             last_noticed_i = last_i
