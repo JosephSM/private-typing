@@ -1,0 +1,51 @@
+*{
+    box-sizing: border-box;
+    padding: 0px;
+    margin: 0px;
+    font-family: monospace;
+}
+span.alive, #liveText{
+    text-decoration: underline;
+}
+span.dead, #completedText{
+    color:rgb(7, 148, 7);
+}
+span.right, #rightText{
+    background-color:yellow;
+}
+span.wrong, #wrongText{
+    background-color: red;
+}
+span.fade{
+    color: grey;
+}
+
+p {
+    font-family: monospace;
+    font-size:20px;
+    text-align: justify;
+    line-height: 1.5em;
+    
+}
+p.para, #typingText{
+    margin-bottom: 20px;
+}
+input, #typingInput{
+    width: 100%;
+    height: 35px;
+    border: 2px solid green;
+    border-radius: 7px;
+    font-family: monospace;
+    font-size:20px;
+    padding:0px 5px;
+}
+div, #gameContainer{
+    margin: 0 auto;
+    padding: 45px;
+    max-width: 750px;
+}
+h1, #speedCounter{
+    position:fixed;
+    top: 10px;
+    right: 10px;
+}
