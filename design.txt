@@ -1,0 +1,1 @@
+At the current implementation, one cannot copy and paste more than one word at a time.
