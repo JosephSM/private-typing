@@ -1,5 +1,5 @@
-let quote = "The event also applies to elements with contenteditable enabled, and to any element when designMode is turned on. In the case of contenteditable and designMode, the event target is the editing host. If these properties apply to multiple elements, the editing host is the nearest ancestor element whose parent isn't editable. For elements with type=checkbox or type=radio, the input event should fire whenever a user toggles the control, per the HTML5 specification. However, historically this has not always been the case. Check compatibility, or use the change event instead for elements of these types."
-
+// let quote = "The event also applies to elements with contenteditable enabled, and to any element when designMode is turned on. In the case of contenteditable and designMode, the event target is the editing host. If these properties apply to multiple elements, the editing host is the nearest ancestor element whose parent isn't editable. For elements with type=checkbox or type=radio, the input event should fire whenever a user toggles the control, per the HTML5 specification. However, historically this has not always been the case. Check compatibility, or use the change event instead for elements of these types."
+let quote = "The event also applies"
 // function 
 let upcoming_words = quote.trim().split(" ")
 let current_word = upcoming_words.shift()

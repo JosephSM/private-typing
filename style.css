@@ -4,19 +4,19 @@
     margin: 0px;
     font-family: monospace;
 }
-span.alive, #liveText{
+span.alive, .liveText{
     text-decoration: underline;
 }
-span.dead, #completedText{
+span.dead, .completedText{
     color:rgb(7, 148, 7);
 }
-span.right, #rightText{
+span.right, .rightText{
     background-color:yellow;
 }
-span.wrong, #wrongText{
+span.wrong, .wrongText{
     background-color: red;
 }
-span.fade{
+span.fade, #upcomingPreview{
     color: grey;
 }
 
