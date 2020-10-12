@@ -1,5 +1,6 @@
 (function(){
-    let quote = "The event also applies"
+    let quote = "where the optional sign may by either + or -, integer and fraction are strings of hexadecimal digits, and exponent is a decimal integer with an optional leading sign. Case is not significant, and there must be at least one hexadecimal digit in either the integer or the fraction. This syntax is similar to the syntax specified in section 6.4.4.2 of the C99 standard, and also to the syntax used in Java 1.5 onwards. In particular, the output of float.hex() is usable as a hexadecimal floating-point literal in C or Java code, and hexadecimal strings produced by C’s %a format character or Java’s Double.toHexString are accepted by float.fromhex()."
+
     let upcoming_words;
     let current_word;
     let finished_words;
@@ -10,7 +11,8 @@
         upcomingPreview,
         upcomingText,
         textPreview, 
-        typingInput
+        typingInput,
+        speedCounter
     ] = createGameElements();
     
     function createLiveWordElement(){
@@ -33,7 +35,7 @@
         liveText.appendChild(rightText);
         liveText.appendChild(wrongText);
         liveText.appendChild(restText);
-        liveContainer. appendChild(liveText)
+        liveContainer.appendChild(liveText)
         liveContainer.appendChild(document.createTextNode(" "));
         return liveContainer
     }
@@ -80,7 +82,8 @@
             upcomingPreview,
             upcomingText,
             textPreview, 
-            typingInput
+            typingInput, 
+            speedCounter
         ]
     }
     function initialGameSetup(parent=document.body){
@@ -104,12 +107,15 @@
     initialGameSetup();
     
     
-    let last_time = Date.now()
+    // let last_time = Date.now()
     let start = null;
     let times = []
     let last_i = 0
     let last_noticed_i = 0
     typingInput.addEventListener("input", function(e){
+        if(!start){
+            start = Date.now()
+        }
         function updateGameDisplay(){
             completedText.innerText = finished_words.join(" ");
             [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
@@ -136,11 +142,15 @@
                 win()
                 resetGame()
             }
+            let time = Date.now() 
             last_i = 0
             advanceWord()
+            speedCounter.innerText = Math.round((finished_words.join(" ").length / 5)/((time - start) /60000));
             e.target.value = "";
             updateGameDisplay()
         }
+
+
         // if (last_noticed_i !== last_i){
         //     let current_time = Date.now()
         //     let wpm_6letter = Math.round(60/((current_time - last_time)/1000*12))
