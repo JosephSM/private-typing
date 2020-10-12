@@ -1,9 +1,13 @@
 (function(){
+
+    // Making the framework to print and break up the main text 
     let quote = "where the optional sign may by either integer"
 
     let upcoming_words;
     let current_word;
     let finished_words;
+
+
     const [
         gameContainer, 
         typingText, 
