@@ -1,5 +1,5 @@
 (function(){
-    let quote = "where the optional sign may by either + or -, integer and fraction are strings of hexadecimal digits, and exponent is a decimal integer with an optional leading sign. Case is not significant, and there must be at least one hexadecimal digit in either the integer or the fraction. This syntax is similar to the syntax specified in section 6.4.4.2 of the C99 standard, and also to the syntax used in Java 1.5 onwards. In particular, the output of float.hex() is usable as a hexadecimal floating-point literal in C or Java code, and hexadecimal strings produced by C’s %a format character or Java’s Double.toHexString are accepted by float.fromhex()."
+    let quote = "where the optional sign may by either integer"
 
     let upcoming_words;
     let current_word;
@@ -66,10 +66,9 @@
         textPreview.appendChild(livePreviewContainer);
         textPreview.appendChild(upcomingPreview);
         
-        const typingInput = document.createElement("input", {
-            "id": "typingInput",
-            "type":"text"
-        });
+        const typingInput = document.createElement("input")
+        typingInput.setAttribute("id", "typingInput");
+        typingInput.setAttribute("type","text");
         const speedCounter = document.createElement("h1");
         speedCounter.setAttribute("id", "speedCounter");
         gameContainer.appendChild(typingText);
@@ -103,6 +102,7 @@
 
     function win(){
         alert("you win!");
+        start = null
     }
 
     initialGameSetup();
@@ -110,9 +110,9 @@
     
     // let last_time = Date.now()
     let start = null;
-    let times = []
+    // let times = []
     let last_i = 0
-    let last_noticed_i = 0
+    // let last_noticed_i = 0
     typingInput.addEventListener("input", function(e){
         if(!start){
             start = Date.now()
@@ -150,29 +150,6 @@
             e.target.value = "";
             updateGameDisplay();
         }
-
-
-        // if (last_noticed_i !== last_i){
-        //     let current_time = Date.now()
-        //     let wpm_6letter = Math.round(60/((current_time - last_time)/1000*12))
-        //     times.push(wpm_6letter)
-        //     let total = 0;
-        //     for(let i = 0; i < times.length; i++) {
-        //         total += times[i];
-        //     }
-        //     let avg = total / times.length;
-        //     speedCounter.innerText = Math.trunc(avg)
-        //     last_time = current_time
-        //     last_noticed_i = last_i
-        // }
-
-        // // Calculate WPM.
-        // if (start === null) {
-        //     start = Date.now()
-        // }
-        // const wpm = finished_words.length / ((Date.now() - start) / (60 * 1000));
-        // document.querySelector('#wpm').innerText = Math.round(wpm);
-
     })
 
 })()

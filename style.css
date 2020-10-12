@@ -2,49 +2,48 @@
     box-sizing: border-box;
     padding: 0px;
     margin: 0px;
-    font-family: monospace;
+    font-family: 'Share Tech Mono', monospace;
 }
-span.alive, .liveText{
+#game{
+    margin: 0 auto;
+    padding: 45px;
+    max-width: 750px;
+}
+#game .liveText{
     text-decoration: underline;
 }
-span.dead, .completedText{
+#game #completedText{
     color:rgb(7, 148, 7);
 }
-span.right, .rightText{
+#game .rightText{
     background-color:yellow;
 }
-span.wrong, .wrongText{
+#game .wrongText{
     background-color: red;
 }
-span.fade, #upcomingPreview{
+#game #upcomingPreview{
     color: grey;
 }
 
-p {
-    font-family: monospace;
+#game p {
     font-size:20px;
     text-align: justify;
     line-height: 1.5em;
     
 }
-p.para, #typingText{
+#game #typingText{
     margin-bottom: 20px;
 }
-input, #typingInput{
+#game #typingInput{
     width: 100%;
     height: 35px;
     border: 2px solid green;
     border-radius: 7px;
-    font-family: monospace;
     font-size:20px;
     padding:0px 5px;
 }
-div, #gameContainer{
-    margin: 0 auto;
-    padding: 45px;
-    max-width: 750px;
-}
-h1, #speedCounter{
+
+#game #speedCounter{
     position:fixed;
     top: 10px;
     right: 10px;
