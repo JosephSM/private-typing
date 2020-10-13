@@ -1,7 +1,7 @@
 (function(){
 
     // Making the framework to print and break up the main text 
-    let quote = "1. if user clicks off the input pause the game and clock2. track characters that user types incorrectly and which letters they're typing instead3. add a mode to allow user to slowly practice the letters that they got wrong4. visual indication of letters that the user consistenly types incorrectly"
+    let quote = selectRandomElem(quotes)
 
     let upcoming_words;
     let current_word;
@@ -16,7 +16,9 @@
         upcomingText,
         textPreview, 
         typingInput,
-        speedCounter
+        speedCounter,
+        scoreContainer,
+        scoreBoard
     ] = createGameElements();
     
     function createLiveWordElement(){
@@ -79,6 +81,27 @@
         gameContainer.appendChild(textPreview);
         gameContainer.appendChild(typingInput);
         gameContainer.appendChild(speedCounter);
+
+
+        const scoreContainer = document.createElement("div");
+        scoreContainer.setAttribute("id", "scoreContainer")
+        const scoreBoard = document.createElement("table")
+        scoreBoard.setAttribute("id", "scoreBoard")
+        scoreContainer.appendChild(scoreBoard)
+        const scoreHeader = document.createElement("tr")
+        scoreHeader.setAttribute("id", "scoreHeader")
+        scoreBoard.appendChild(scoreHeader)
+        const scoreTime = document.createElement("th")
+        scoreTime.setAttribute("id", "scoreTime")
+        scoreTime.innerText = "Time"
+        scoreHeader.appendChild(scoreTime)
+        const scoreValue = document.createElement("th")
+        scoreValue.setAttribute("id", "scoreValue")   
+        scoreValue.innerText = "Score"
+        scoreHeader.appendChild(scoreValue)     
+
+
+        
         return [
             gameContainer, 
             typingText, 
@@ -87,7 +110,9 @@
             upcomingText,
             textPreview, 
             typingInput, 
-            speedCounter
+            speedCounter,
+            scoreContainer,
+            scoreBoard
         ]
     }
     function initialGameSetup(parent=document.body){
@@ -96,19 +121,21 @@
         finished_words = [];
         upcomingText.innerText = quote;
         parent.appendChild(gameContainer);
+        parent.appendChild(scoreContainer)
         typingInput.focus();
     }
     function resetGame(){
+        quote = selectRandomElem(quotes)
         current_word = "";
         upcoming_words = quote.trim().split(" ");
         finished_words = [];
-    }
-
-    function win(){
-        alert("you win!");
         start = null
         pauseTimes = []
         resumeTimes = []
+    }
+
+    function win(){
+        addScoreRow()
     }
 
     function pauseGame(){
@@ -122,10 +149,41 @@
     }
 
     function calculatePlayTime(){
+        console.log(pauseTimes)
+        console.log(resumeTimes)
         let totalTimePaused = 0;
         for(let i = 0; i < pauseTimes.length; i++)
             totalTimePaused += resumeTimes[i] - pauseTimes[i]
         return Date.now() - start - totalTimePaused
+    }
+    function checkTime(i) {
+        if (i < 10) {
+          i = "0" + i;
+        }
+        return i;
+      }
+
+      function selectRandomElem(items){
+        return items[Math.floor(Math.random() * items.length)];
+      }
+
+    function addScoreRow(){
+        let tr = document.createElement("tr")
+        let time = document.createElement("td")
+        let dt = new Date()
+        let hrs = dt.getHours()%12
+        let mins = checkTime(dt.getMinutes())
+        let secs = checkTime(dt.getSeconds())
+        time.innerText = hrs+":"+mins+":"+secs;
+        let value = document.createElement("td")
+        value.innerText = speed
+        tr.appendChild(time)
+        tr.appendChild(value)
+        if (!scoreHeader.nextSibling){
+            scoreBoard.appendChild(tr)
+        }else{
+            scoreBoard.insertBefore(tr, scoreHeader.nextSibling)
+        }
     }
 
     initialGameSetup();
@@ -133,8 +191,10 @@
     
     // let last_time = Date.now()
     let start = null;
+    let speed = null;
     let pauseTimes = [];
     let resumeTimes = [];
+    let scores = [];
     let last_i = 0
     typingInput.addEventListener("input", function(e){
         if(!start){
@@ -170,7 +230,8 @@
             let time = Date.now() 
             last_i = 0
             advanceWord()
-            speedCounter.innerText = Math.round((finished_words.join(" ").length / 5)/(calculatePlayTime() /60000));
+            speed = Math.round((finished_words.join(" ").length / 5)/(calculatePlayTime() /60000));
+            speedCounter.innerText = speed;
             e.target.value = "";
             updateGameDisplay();
         }
