@@ -10,4 +10,9 @@
 8. run time tracking on a time interval rather than simply when the user types (maybe have this set as an option that can change later)
 9. spaced repitition mode.
 
+10. Change shade of red to lighter shade
+11. Change shade of green on pause to lighter shade
 
+12. Move times to sidebar
+13. implement scroll
+14. make statistic page in sidebar
