@@ -6,4 +6,8 @@
 4. visual indication of letters that the user consistenly types incorrectly
 5. add voice mode.
 6. track speed for individual characters
-7. 
+7. track accuracy
+8. run time tracking on a time interval rather than simply when the user types (maybe have this set as an option that can change later)
+9. spaced repitition mode.
+
+

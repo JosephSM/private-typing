@@ -21,7 +21,11 @@
 #game .wrongText{
     background-color: red;
 }
-#game #upcomingPreview{
+
+#game #textPreview{
+    margin-left: 7px;
+}
+#game #upcomingPreview{  
     color: grey;
 }
 

@@ -1,7 +1,7 @@
 (function(){
 
     // Making the framework to print and break up the main text 
-    let quote = "where the optional sign may by either integer"
+    let quote = "1. if user clicks off the input pause the game and clock2. track characters that user types incorrectly and which letters they're typing instead3. add a mode to allow user to slowly practice the letters that they got wrong4. visual indication of letters that the user consistenly types incorrectly"
 
     let upcoming_words;
     let current_word;
@@ -107,6 +107,25 @@
     function win(){
         alert("you win!");
         start = null
+        pauseTimes = []
+        resumeTimes = []
+    }
+
+    function pauseGame(){
+        gameContainer.style = "background-color:grey;"
+        pauseTimes.push(Date.now());
+
+    }
+    function resumeGame(){
+        gameContainer.style = "background-color:white;"
+        resumeTimes.push(Date.now());
+    }
+
+    function calculatePlayTime(){
+        let totalTimePaused = 0;
+        for(let i = 0; i < pauseTimes.length; i++)
+            totalTimePaused += resumeTimes[i] - pauseTimes[i]
+        return Date.now() - start - totalTimePaused
     }
 
     initialGameSetup();
@@ -114,9 +133,9 @@
     
     // let last_time = Date.now()
     let start = null;
-    // let times = []
+    let pauseTimes = [];
+    let resumeTimes = [];
     let last_i = 0
-    // let last_noticed_i = 0
     typingInput.addEventListener("input", function(e){
         if(!start){
             start = Date.now()
@@ -137,7 +156,8 @@
             current_word = upcoming_words.shift();
         }
         for(let i = 0; i <= e.target.value.length; i++){ 
-            if ((e.target.value.slice(0, i) === current_word.slice(0, i)) && (i !== last_i || last_i === 0)){
+            if ((e.target.value.slice(0, i) === current_word.slice(0, i)) 
+                && (i !== last_i || last_i === 0)){
                 last_i = i;
                 updateGameDisplay();
             }
@@ -150,10 +170,13 @@
             let time = Date.now() 
             last_i = 0
             advanceWord()
-            speedCounter.innerText = Math.round((finished_words.join(" ").length / 5)/((time - start) /60000));
+            speedCounter.innerText = Math.round((finished_words.join(" ").length / 5)/(calculatePlayTime() /60000));
             e.target.value = "";
             updateGameDisplay();
         }
     })
+
+    typingInput.addEventListener("focusout", pauseGame)
+    typingInput.addEventListener("focusin", resumeGame)
 
 })()
