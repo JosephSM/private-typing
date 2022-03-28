@@ -2,7 +2,6 @@
 
     // Making the framework to print and break up the main text 
     let quote = selectRandomElem(quotes)
-
     let upcoming_words;
     let current_word;
     let finished_words;
@@ -99,8 +98,6 @@
         scoreValue.setAttribute("id", "scoreValue")   
         scoreValue.innerText = "Score"
         scoreHeader.appendChild(scoreValue)     
-
-
         
         return [
             gameContainer, 
@@ -149,8 +146,6 @@
     }
 
     function calculatePlayTime(){
-        console.log(pauseTimes)
-        console.log(resumeTimes)
         let totalTimePaused = 0;
         for(let i = 0; i < pauseTimes.length; i++)
             totalTimePaused += resumeTimes[i] - pauseTimes[i]
@@ -195,6 +190,7 @@
     let pauseTimes = [];
     let resumeTimes = [];
     let scores = [];
+    // index of last correctly typed letter
     let last_i = 0
     typingInput.addEventListener("input", function(e){
         if(!start){
@@ -202,6 +198,7 @@
         }
         function updateGameDisplay(){
             completedText.innerText = finished_words.join(" ");
+            // can this be simplified?
             [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
                 elem.querySelector(".rightText").innerText = current_word.slice(0,last_i);
                 elem.querySelector(".wrongText").innerText = current_word.slice(last_i, e.target.value.length);
@@ -216,6 +213,9 @@
             current_word = upcoming_words.shift();
         }
         for(let i = 0; i <= e.target.value.length; i++){ 
+            // if text typed is correct until this point
+            // and more letters are correct than before 
+            // or we're on to the next word 
             if ((e.target.value.slice(0, i) === current_word.slice(0, i)) 
                 && (i !== last_i || last_i === 0)){
                 last_i = i;
@@ -227,7 +227,7 @@
                 win();
                 resetGame();
             }
-            let time = Date.now() 
+            // let time = Date.now() 
             last_i = 0
             advanceWord()
             speed = Math.round((finished_words.join(" ").length / 5)/(calculatePlayTime() /60000));
