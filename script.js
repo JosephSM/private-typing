@@ -1,119 +1,104 @@
 (function the_game() {
-    quotes = quotes["Harry Potter"]
+    // const collections = Object.keys()
+    let quotes = quote_collection["Harry Potter"]
+    if (settings.quotes){
+        quotes = quote_collection[settings.quote_collection]
+    }
+
+    function removePunctuation(str) {
+        return str.replace(/[.,'\/#!?$%\^&\*;:{}=\-_`~()]/g, "")
+            .replace(/\s{2,}/g, " ")
+    }
+
+    function syllabify(words) {
+        const syllableRegex = /[^aeiouy]*[aeiouy]+(?:[^aeiouy]*$|[^aeiouy](?=[^aeiouy]))?/gi;
+        return words.match(syllableRegex);
+    }
 
     function processQuote(source) {
-        let quote = selectRandomElem(source)
-        //TODO - replace unwanted characters with " "
-
-
-        function remove_punctuation(str){
-            return str.replace(/[.,'\/#!?$%\^&\*;:{}=\-_`~()]/g, "")
-                .replace(/\s{2,}/g, " ")
-        }
-
+        let quote = selectRandomElem(source);
+        
         if (settings.auto_capitalize) {
             quote = quote.replace(
                 /\w\S*/g,
                 function (txt) {
                     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
                 }
-            );
-        }
+                );
+            }
         
-        if(settings.auto_punctuate){
+        if (settings.auto_punctuate) {
             let fin = []
-            let words = remove_punctuation(quote).split(" ")
+            let words = removePunctuation(quote).split(" ")
             let numOps = "#$+%~=*^.><-"
             let pref = "@#&*/-\\"
             let suf = ":.;,?!"
-            let wordOps = suf+pref
+            let wordOps = suf + pref
             let pairs = {
-                "(":")",
-                "[":"]",
-                "{":"}",
-                "<":">",
-                '"':'"',
-                "'":"'",
-                "`":"`"
+                "(": ")",
+                "[": "]",
+                "{": "}",
+                "<": ">",
+                '"': '"',
+                "'": "'",
+                "`": "`"
             }
-            if(settings.alternate_quoting){
-                wordOps+= Object.keys(pairs).join()
+            if (settings.alternate_quoting) {
+                wordOps += Object.keys(pairs).join()
             }
             let isWord = false;
-            for (let word of words){
+            for (let word of words) {
                 let op
-                if(isNaN(parseInt(word))){
+                if (isNaN(parseInt(word))) {
                     isWord = true;
                     op = wordOps[Math.floor(Math.random() * wordOps.length)]
-                } else{
+                } else {
                     op = numOps[Math.floor(Math.random() * numOps.length)]
                 }
                 let newToken
-                if(isWord){
-                    if(pref.includes(op)){
-                        newToken = op + word 
+                if (isWord) {
+                    if (pref.includes(op)) {
+                        newToken = op + word
                     }
-                    else if(suf.includes(op)){
+                    else if (suf.includes(op)) {
                         newToken = word + op
                     }
                     else {
                         newToken = op + word + pairs[op]
                     }
-                    } else {
-                    newToken = (op === '%')? word+op : op + word
+                } else {
+                    newToken = (op === '%') ? word + op : op + word
                 }
                 fin.push(newToken)
             }
-            return fin.join(" ")
+            quote = fin.join(" ")
         }
 
-        
-        function syllabify(words) {
-            const syllableRegex = /[^aeiouy]*[aeiouy]+(?:[^aeiouy]*$|[^aeiouy](?=[^aeiouy]))?/gi;
-            return words.match(syllableRegex);
-        }
-        if (settings.split_syllables_naive){
+        if (settings.split_syllables_naive) {
             quote = quote.split(" ")
-                        .map(syllabify)
-                        .map(x => 
-                            (x === null)
-                                ? "" 
-                                : x.join(" "))
-                        .join(" ") 
+                .map(syllabify)
+                .map(x =>
+                    (x === null)
+                        ? ""
+                        : x.join(" "))
+                .join(" ")
         }
+
         if (!settings.show_punctuation) {
-            quote = remove_punctuation(quote)
+            quote = removePunctuation(quote);
         }
+
         if (!settings.show_capitalization) {
-            quote = quote.toLowerCase()
+            quote = quote.toLowerCase();
         }
 
         if (settings.no_spaces) {
-            quote = quote.split(" ").join("")
+            console.log(quote.split(" "));
+            quote = quote.split(" ").join("");
         }
+
         return quote.trim()
     }
-
-    let quote = processQuote(quotes)
-    let upcoming_words;
-    let current_word;
-    let finished_words;
-
-
-    const [
-        gameContainer,
-        gameHeaderContainer,
-        typingText,
-        completedText,
-        upcomingPreview,
-        upcomingText,
-        textPreview,
-        typingInput,
-        elapsedTimeCounter,
-        speedCounter,
-        scoreContainer,
-        scoreBoard
-    ] = createGameElements();
 
     function createLiveWordElement() {
         const liveContainer = document.createElement("span");
@@ -171,8 +156,6 @@
             textPreview.appendChild(upcomingPreview);
         }
 
-        const name = document.querySelector
-
         const typingInput = document.createElement("input")
         typingInput.setAttribute("id", "typingInput");
         typingInput.setAttribute("type", "text");
@@ -229,46 +212,10 @@
             scoreBoard
         ]
     }
-    function initialGameSetup(parent = document.body) {
-        upcoming_words = quote.trim()
-        upcoming_words = upcoming_words.split(" ");
-        current_word = upcoming_words.shift();
-        finished_words = [];
-        parent.appendChild(gameContainer);
-        parent.appendChild(scoreContainer);
-        [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
-            elem.querySelector(".rightText").innerText = ""
-            elem.querySelector(".wrongText").innerText = ""
-            elem.querySelector(".restText").innerText = current_word
-        })
-        upcomingText.innerText = upcoming_words.join(" ");
-        upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
-        typingInput.focus();
-    }
-    function resetGame(button = false) {
-        if (button) {
-            createDialog("play-again", "Play Again?", "Play")
-        }
-        quote = processQuote(quotes)
-        clearInterval(speed_update_interval)
-        clearInterval(game_clock)
-        new_game = true
-        current_word = "";
-        typingInput.value = ""
-        upcoming_words = quote.trim().split(" ");
-        finished_words = [];
-        start = settings.auto_restart_clock ? Date.now() : null;
-        last_i = 0;
-        pauseTimes = []
-        resumeTimes = []
-    }
 
     function win() {
         addScoreRow()
     }
-
-
-
 
     function createDialog(name, heading = "Heading") {
         const Dialog = document.createElement('div')
@@ -298,13 +245,13 @@
         return Dialog
     }
 
-    function pauseGame(style=true) {
+    function pauseGame(style = true) {
         // createDialog("unpause", "Resume the game?", "Resume")
-        if(start && pauseTimes.length === resumeTimes.length){
-            if(style)
+        if (start && pauseTimes.length === resumeTimes.length) {
+            if (style)
                 gameContainer.style = "background-color:grey;"
             pauseTimes.push(Date.now());
-        }else{
+        } else {
             console.log("pause game called without start")
         }
         // console.log(pauseTimes)
@@ -344,8 +291,55 @@
             scoreBoard.insertBefore(tr, scoreHeader.nextSibling)
         }
     }
+
+    function resetGame(button = false) {
+        if (button) {
+            createDialog("play-again", "Play Again?", "Play")
+        }
+        clearInterval(speed_update_interval)
+        clearInterval(game_clock)
+        typingInput.value = ""
+        quote = processQuote(quotes)
+        upcoming_words = quote.trim().split(" ");
+        current_word = "";
+        finished_words = [];
+        new_game = true
+        start = settings.auto_restart_clock ? Date.now() : null;
+        resumeGame()
+        pauseTimes = []
+        resumeTimes = []
+        last_i = 0;
+    }
+
+    const [
+        gameContainer,
+        gameHeaderContainer,
+        typingText,
+        completedText,
+        upcomingPreview,
+        upcomingText,
+        textPreview,
+        typingInput,
+        elapsedTimeCounter,
+        speedCounter,
+        scoreContainer,
+        scoreBoard
+    ] = createGameElements();
+    document.body.appendChild(gameContainer);
+    document.body.appendChild(scoreContainer);
     //TODO - combine with resetGame
-    initialGameSetup();
+    let quote = processQuote(quotes)
+    let upcoming_words = quote.trim().split(" ");
+    let current_word = upcoming_words.shift();
+    let finished_words = [];
+    [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
+        elem.querySelector(".rightText").innerText = ""
+        elem.querySelector(".wrongText").innerText = ""
+        elem.querySelector(".restText").innerText = current_word
+    })
+    upcomingText.innerText = upcoming_words.join(" ");
+    upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
+    typingInput.focus();
 
     // new_game set to true before each new game
     let new_game = true;
@@ -357,7 +351,7 @@
     let speed = null;
     let pauseTimes = [];
     let resumeTimes = [];
-    let scores = [];
+    // let scores = [];
     // index of last correctly typed letter
     let last_i = 0;
 
@@ -414,8 +408,9 @@
                 if (settings.show_elapsed) {
                     elapsedTimeCounter.innerText = settings.elapsed_label + " " + Math.floor(calculatePlayTime("seconds"))
                 }
-                console.log(pauseTimes)
+                // console.log(pauseTimes)
             }, 100)
+
             if (settings.show_wpm) {
                 if (settings.wpm_update !== "ON_WORD"
                     && settings.wpm_update !== "ON_TYPE") {
@@ -433,7 +428,7 @@
             }
             new_game = false;
         }
-        if (pauseTimes.length > resumeTimes.length){
+        if (pauseTimes.length > resumeTimes.length) {
             resumeGame()
         }
 
@@ -460,10 +455,10 @@
             // and more letters are correct than before 
             // or we're on to the next word 
 
-            if (!settings.allow_incorrect_letters){
+            if (!settings.allow_incorrect_letters) {
                 if (e.target.value.slice(0, i) !== current_word.slice(0, i)
                     && e.target.value !== current_word + " "
-                ){
+                ) {
                     e.target.value = current_word.slice(0, last_i)
                 }
             }
@@ -482,7 +477,7 @@
         if (e.target.value === current_word + " "
             || settings.allow_errors && e.target.value.slice(-1) === " "
         ) {
-            if (settings.pause_timer_between_words){
+            if (settings.pause_timer_between_words) {
                 pauseGame()
             }
             if (upcoming_words.length === 0) {

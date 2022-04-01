@@ -63,3 +63,4 @@ show virtual keyboard
 https://color.adobe.com/create/color-wheel
 reset counters at end of game
 enable multiline
+selection test 
