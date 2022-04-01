@@ -1,9 +1,4 @@
 (function the_game() {
-    // const collections = Object.keys()
-    let quotes = quote_collection["Harry Potter"]
-    if (settings.quotes){
-        quotes = quote_collection[settings.quote_collection]
-    }
 
     function removePunctuation(str) {
         return str.replace(/[.,'\/#!?$%\^&\*;:{}=\-_`~()]/g, "")
@@ -17,16 +12,16 @@
 
     function processQuote(source) {
         let quote = selectRandomElem(source);
-        
+
         if (settings.auto_capitalize) {
             quote = quote.replace(
                 /\w\S*/g,
                 function (txt) {
                     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
                 }
-                );
-            }
-        
+            );
+        }
+
         if (settings.auto_punctuate) {
             let fin = []
             let words = removePunctuation(quote).split(" ")
@@ -248,7 +243,7 @@
     function pauseGame(style = true) {
         // only pause a game if it has started
         // or not already paused
-        console.log("pause called"+start)
+        console.log("pause called" + start)
         console.log(pauseTimes)
         console.log(resumeTimes)
         if (start && pauseTimes.length === resumeTimes.length) {
@@ -266,6 +261,34 @@
             resumeTimes.push(Date.now());
         }
     }
+
+    function totalTimePaused() {
+        let totalTimePaused = 0;
+        let resumetime;
+        for (let i = 0; i < pauseTimes.length; i++) {
+            resumetime = resumeTimes[i] || current_time
+            totalTimePaused += resumetime - pauseTimes[i]
+        }
+        return totalTimePaused
+    }
+
+    function calculatePlayTime(units = "seconds") {
+        let playtime = current_time - start - totalTimePaused()
+        if (units === "seconds") {
+            playtime /= 1000
+        } else if (units === "minutes") {
+            playtime /= 60000
+        }
+        return playtime
+    }
+
+    function calculate_speed(completed_letters = last_i + 1) {
+        //TODO - make this clearer
+        return Math.round(
+            ((finished_words.join(" ").length + completed_letters) / settings.word_length)
+            / calculatePlayTime("minutes"));
+    }
+
 
     function checkTime(i) {
         if (i < 10) {
@@ -304,9 +327,9 @@
         if (button) {
             createDialog("play-again", "Play Again?", "Play")
         }
-        if(speed_update_interval)
+        if (speed_update_interval)
             clearInterval(speed_update_interval)
-        if(game_clock)
+        if (game_clock)
             clearInterval(game_clock)
         typingInput.value = ""
         typingInput.focus();
@@ -343,7 +366,7 @@
         scoreBoard
     ] = createGameElements();
 
-    function updateGameDisplay(input=typingInput.value) {
+    function updateGameDisplay(input = typingInput.value) {
         if (settings.show_word_history) {
             completedText.innerText = finished_words.join(" ");
         }
@@ -359,52 +382,30 @@
 
     document.body.appendChild(gameContainer);
     document.body.appendChild(scoreContainer);
+    // const collections = Object.keys()
+    let quotes = quote_collection["Harry Potter"]
+    if (settings.quotes) {
+        quotes = quote_collection[settings.quote_collection]
+    }
     //TODO - combine with resetGame
-    let quote, 
-        upcoming_words, 
-        current_word, 
-        finished_words, 
-        new_game, 
-        start, 
-        speed_update_interval, 
-        seconds_since_start, 
-        game_clock, 
-        speed, 
-        pauseTimes, 
-        resumeTimes, 
+    let quote,
+        upcoming_words,
+        current_word,
+        finished_words,
+        new_game,
+        start,
+        speed_update_interval,
+        seconds_since_start,
+        game_clock,
+        speed,
+        pauseTimes,
+        resumeTimes,
         last_i;
-        resetGame()
-        updateGameDisplay()
-        if (settings.pause_on_mouseout) {
-            typingInput.addEventListener("focusout", pauseGame)
-        }
-        
-        
-        function totalTimePaused() {
-            let totalTimePaused = 0;
-            let resumetime;
-            for (let i = 0; i < pauseTimes.length; i++) {
-                resumetime = resumeTimes[i] || current_time
-            totalTimePaused += resumetime - pauseTimes[i]
-        }
-        return totalTimePaused
-    }
-
-    function calculatePlayTime(units = "seconds") {
-        let playtime = current_time - start - totalTimePaused()
-        if (units === "seconds") {
-            playtime /= 1000
-        } else if (units === "minutes") {
-            playtime /= 60000
-        }
-        return playtime
-    }
-
-    function calculate_speed(completed_letters=last_i+1) {
-        //TODO - make this clearer
-        return Math.round(
-            ((finished_words.join(" ").length + completed_letters) / settings.word_length)
-            / calculatePlayTime("minutes"));
+    
+    resetGame()
+    updateGameDisplay()
+    if (settings.pause_on_mouseout) {
+        typingInput.addEventListener("focusout", pauseGame)
     }
 
     typingInput.addEventListener("input", function (e) {
@@ -452,7 +453,7 @@
             }
             new_game = false;
         }
-        
+
         if (pauseTimes.length > resumeTimes.length) {
             resumeGame()
         }
@@ -482,9 +483,9 @@
             speed = calculate_speed(completed_letters = last_i + 1)
             speedCounter.innerText = settings.wpm_label + " " + speed;
         }
-        if (e.target.value === current_word + " " 
-        || (!settings.advance_on_space && (last_i === current_word.length))
-        || settings.advance_with_errors && e.target.value.slice(-1) === " "
+        if (e.target.value === current_word + " "
+            || (!settings.advance_on_space && (last_i === current_word.length))
+            || settings.advance_with_errors && e.target.value.slice(-1) === " "
         ) {
             if (settings.show_wpm && settings.wpm_update === "ON_WORD") {
                 speedCounter.innerText = settings.wpm_label + " " + speed;
@@ -498,7 +499,7 @@
                     resetGame();
                 else
                     resetGame(button = true)
-            }else{
+            } else {
                 last_i = 0
                 advanceWord()
             }
