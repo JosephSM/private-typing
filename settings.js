@@ -5,16 +5,17 @@ let settings = {
     word_length: 5, // done
     wpm_update: "CONSTANT", // done
     wpm_update_interval: 50, // done
+    advance_on_space: true, // done
     show_countdown: false, //done
     pause_countdown_on_pause: false, // done
     show_word_history: true, // done
-    show_elapsed: false, // done
+    show_elapsed: true, // done
     show_wpm: true, //done
     elapsed_label: "", // done
     show_total_elapsed: false, // done
     pause_timer_between_words: true, // done 
-    allow_errors: false, // done 
-    allow_incorrect_letters: false, // done
+    advance_with_errors: false, // done //aka allow_errors
+    allow_incorrect_letters: true, // done
     countdown_time: 30, // done
     show_preview: true, // done
     show_punctuation: true, // done
@@ -44,6 +45,8 @@ let settings = {
     // auto_contrast_colors: false , 
     // auto_quote: false,
     replay_on_condition: false, // didn't reach a threshold wpm, 
+    win_on_space:true,
+    win_on_enter:true,
     show_error_history: false,
     game_width: "NORMAL",
     max_width: "", //

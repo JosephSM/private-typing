@@ -246,7 +246,11 @@
     }
 
     function pauseGame(style = true) {
-        // createDialog("unpause", "Resume the game?", "Resume")
+        // only pause a game if it has started
+        // or not already paused
+        console.log("pause called"+start)
+        console.log(pauseTimes)
+        console.log(resumeTimes)
         if (start && pauseTimes.length === resumeTimes.length) {
             if (style)
                 gameContainer.style = "background-color:grey;"
@@ -254,12 +258,13 @@
         } else {
             console.log("pause game called without start")
         }
-        // console.log(pauseTimes)
     }
 
     function resumeGame() {
-        gameContainer.style = "background-color:white;"
-        resumeTimes.push(Date.now());
+        if (start && pauseTimes.length > resumeTimes.length) {
+            gameContainer.style = "background-color:white;"
+            resumeTimes.push(Date.now());
+        }
     }
 
     function checkTime(i) {
@@ -291,24 +296,36 @@
             scoreBoard.insertBefore(tr, scoreHeader.nextSibling)
         }
     }
-
+    function advanceWord() {
+        finished_words.push(current_word);
+        current_word = upcoming_words.shift();
+    }
     function resetGame(button = false) {
         if (button) {
             createDialog("play-again", "Play Again?", "Play")
         }
-        clearInterval(speed_update_interval)
-        clearInterval(game_clock)
+        if(speed_update_interval)
+            clearInterval(speed_update_interval)
+        if(game_clock)
+            clearInterval(game_clock)
         typingInput.value = ""
+        typingInput.focus();
         quote = processQuote(quotes)
         upcoming_words = quote.trim().split(" ");
         current_word = "";
         finished_words = [];
+        advanceWord()
         new_game = true
         start = settings.auto_restart_clock ? Date.now() : null;
-        resumeGame()
+        speed_update_interval = null;
+        seconds_since_start = null;
+        game_clock = null;
+        current_time = null;
+        speed = null;
         pauseTimes = []
         resumeTimes = []
         last_i = 0;
+        // resumeGame()
     }
 
     const [
@@ -325,45 +342,54 @@
         scoreContainer,
         scoreBoard
     ] = createGameElements();
+
+    function updateGameDisplay(input=typingInput.value) {
+        if (settings.show_word_history) {
+            completedText.innerText = finished_words.join(" ");
+        }
+        // can this be simplified?
+        [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
+            elem.querySelector(".rightText").innerText = current_word.slice(0, last_i);
+            elem.querySelector(".wrongText").innerText = current_word.slice(last_i, input.length);
+            elem.querySelector(".restText").innerText = current_word.slice(input.length);
+        })
+        upcomingText.innerText = upcoming_words.join(" ");
+        upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
+    }
+
     document.body.appendChild(gameContainer);
     document.body.appendChild(scoreContainer);
     //TODO - combine with resetGame
-    let quote = processQuote(quotes)
-    let upcoming_words = quote.trim().split(" ");
-    let current_word = upcoming_words.shift();
-    let finished_words = [];
-    [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
-        elem.querySelector(".rightText").innerText = ""
-        elem.querySelector(".wrongText").innerText = ""
-        elem.querySelector(".restText").innerText = current_word
-    })
-    upcomingText.innerText = upcoming_words.join(" ");
-    upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
-    typingInput.focus();
-
-    // new_game set to true before each new game
-    let new_game = true;
-    let start = null;
-    let speed_update_interval;
-    let seconds_since_start;
-    let game_clock = null;
-    let current_time = null
-    let speed = null;
-    let pauseTimes = [];
-    let resumeTimes = [];
-    // let scores = [];
-    // index of last correctly typed letter
-    let last_i = 0;
-
-    function totalTimePaused() {
-        let totalTimePaused = 0;
-        let resumetime;
-        for (let i = 0; i < pauseTimes.length; i++) {
-            resumetime = resumeTimes[i] || current_time
+    let quote, 
+        upcoming_words, 
+        current_word, 
+        finished_words, 
+        new_game, 
+        start, 
+        speed_update_interval, 
+        seconds_since_start, 
+        game_clock, 
+        speed, 
+        pauseTimes, 
+        resumeTimes, 
+        last_i;
+        resetGame()
+        updateGameDisplay()
+        if (settings.pause_on_mouseout) {
+            typingInput.addEventListener("focusout", pauseGame)
+        }
+        
+        
+        function totalTimePaused() {
+            let totalTimePaused = 0;
+            let resumetime;
+            for (let i = 0; i < pauseTimes.length; i++) {
+                resumetime = resumeTimes[i] || current_time
             totalTimePaused += resumetime - pauseTimes[i]
         }
         return totalTimePaused
     }
+
     function calculatePlayTime(units = "seconds") {
         let playtime = current_time - start - totalTimePaused()
         if (units === "seconds") {
@@ -374,22 +400,22 @@
         return playtime
     }
 
-    function calculate_speed(completed_letters = 0) {
+    function calculate_speed(completed_letters=last_i+1) {
         //TODO - make this clearer
         return Math.round(
             ((finished_words.join(" ").length + completed_letters) / settings.word_length)
-            / (calculatePlayTime("minutes")));
+            / calculatePlayTime("minutes"));
     }
+
     typingInput.addEventListener("input", function (e) {
-        if (!start) {
-            pauseTimes = []
-            resumeTimes = []
-            start = Date.now()
-        }
         if (new_game) {
+            if (!start) {
+                start = Date.now()
+            }
             game_clock = setInterval(function () {
                 current_time = Date.now()
                 seconds_since_start = Math.floor((current_time - start) / 1000);
+                speed = calculate_speed()
                 if (settings.show_countdown) {
                     let countdown_time = settings.countdown_time - seconds_since_start;
                     if (settings.pause_countdown_on_pause) {
@@ -398,7 +424,6 @@
                     countdownTimerCounter.innerText = "countdown: " + countdown_time
                     if (countdown_time <= 0) {
                         resetGame()
-                        advanceWord()
                         updateGameDisplay()
                     }
                 }
@@ -421,35 +446,18 @@
                         interval = 100;
                     }
                     speed_update_interval = setInterval(function () {
-                        speed = calculate_speed(completed_letters = last_i + 1)
                         speedCounter.innerText = settings.wpm_label + " " + speed;
                     }, interval)
                 }
             }
             new_game = false;
         }
+        
         if (pauseTimes.length > resumeTimes.length) {
             resumeGame()
         }
 
-        function updateGameDisplay() {
-            if (settings.show_word_history) {
-                completedText.innerText = finished_words.join(" ");
-            }
-            // can this be simplified?
-            [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
-                elem.querySelector(".rightText").innerText = current_word.slice(0, last_i);
-                elem.querySelector(".wrongText").innerText = current_word.slice(last_i, e.target.value.length);
-                elem.querySelector(".restText").innerText = current_word.slice(e.target.value.length);
-            })
-            upcomingText.innerText = upcoming_words.join(" ");
-            upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
-        }
 
-        function advanceWord() {
-            finished_words.push(current_word);
-            current_word = upcoming_words.shift();
-        }
         for (let i = 0; i <= e.target.value.length; i++) {
             // if text typed is correct until this point
             // and more letters are correct than before 
@@ -474,9 +482,13 @@
             speed = calculate_speed(completed_letters = last_i + 1)
             speedCounter.innerText = settings.wpm_label + " " + speed;
         }
-        if (e.target.value === current_word + " "
-            || settings.allow_errors && e.target.value.slice(-1) === " "
+        if (e.target.value === current_word + " " 
+        || (!settings.advance_on_space && (last_i === current_word.length))
+        || settings.advance_with_errors && e.target.value.slice(-1) === " "
         ) {
+            if (settings.show_wpm && settings.wpm_update === "ON_WORD") {
+                speedCounter.innerText = settings.wpm_label + " " + speed;
+            }
             if (settings.pause_timer_between_words) {
                 pauseGame()
             }
@@ -486,18 +498,12 @@
                     resetGame();
                 else
                     resetGame(button = true)
-            }
-            last_i = 0
-            advanceWord()
-            if (settings.show_wpm && settings.wpm_update === "ON_WORD") {
-                speed = calculate_speed()
-                speedCounter.innerText = settings.wpm_label + " " + speed;
+            }else{
+                last_i = 0
+                advanceWord()
             }
             e.target.value = "";
             updateGameDisplay();
         }
     })
-    if (settings.pause_on_mouseout) {
-        typingInput.addEventListener("focusout", pauseGame)
-    }
 })()
