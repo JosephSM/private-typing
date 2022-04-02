@@ -17,6 +17,7 @@
 15. Wrong text is inconsistent because it only does the word
 	and does not do the whitespace after or next words
 
+text-formatting mode
 set your own rules and point system
 slow mode // can only type slowly 
 practice math

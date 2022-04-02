@@ -3,29 +3,31 @@ const wpm_update_options = ["ON_TYPE", "ON_WORD", "TIME_ELAPSE", "ON_CLOCK", "CO
 let settings = {
     quote_collection:"Benjamin Franklin",
     word_length: 5, // done
-    wpm_update: "CONSTANT", // done
+    wpm_update: "ON_CLOCK", // done - change "onclock"
     wpm_update_interval: 50, // done
     advance_on_space: true, // done
+    show_upcoming_letter: true, // done
     show_countdown: false, //done
-    pause_countdown_on_pause: false, // done
+    pause_countdown_on_pause: true, // done
+    keep_completed_letters: false,
     show_word_history: true, // done
     show_elapsed: true, // done
     show_wpm: true, //done
     elapsed_label: "", // done
     show_total_elapsed: false, // done
-    pause_timer_between_words: true, // done 
+    pause_timer_between_words: false, // done 
     advance_with_errors: false, // done //aka allow_errors
     allow_incorrect_letters: true, // done
     countdown_time: 30, // done
     show_preview: true, // done
-    show_punctuation: true, // done
+    show_punctuation: false, // done
     show_capitalization: true, // done
     no_spaces: false, // done
     wpm_label: "", // done 
     auto_restart: true, // done
     auto_restart_clock: false, // done
-    auto_capitalize: true, //done
-    auto_punctuate: true, //done
+    auto_capitalize: false, //done
+    auto_punctuate: false, //done
     pause_on_mouseout: true, // done
     preview_length: 3, //done
     alternate_quoting: true, // quasi-done
@@ -39,11 +41,11 @@ let settings = {
     // edit mode 
     // diff mode
     // RANDOM IDEA : search engine that accounts for your history 
-    game_type: "NORMAL",
     // show_paused: false, // ?
     // show_pause_icon: false,
     // auto_contrast_colors: false , 
     // auto_quote: false,
+    game_type: "NORMAL",
     replay_on_condition: false, // didn't reach a threshold wpm, 
     win_on_space:true,
     win_on_enter:true,
@@ -73,5 +75,4 @@ let settings = {
     min_wpm: false,
     min_accuracy: false,
     disable_backspace: false,
-    submit_on_completed_word: false,
 }
