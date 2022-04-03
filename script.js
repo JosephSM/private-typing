@@ -1,7 +1,7 @@
 (function the_game() {
 
     // TODO
-    function removeUntypables(){
+    function removeUntypables() {
         let untypeables = "—"
     }
 
@@ -344,7 +344,15 @@
         }
     }
     function advanceWord() {
-        current_word_mistyped = false;
+        if (current_word_mistyped) {
+            if (data["word_mistypes"].hasOwnProperty(current_word)) {
+                data["word_mistypes"][current_word] += 1
+            }
+            else {
+                data["word_mistypes"][current_word] = 1
+            }
+            current_word_mistyped = false;
+        }
         finished_words.push(current_word);
         current_word = upcoming_words.shift();
         let current_word_unpunct = removePunctuation(current_word)
@@ -353,8 +361,10 @@
         } else {
             data["words"][current_word_unpunct] = 1
         }
+        last_i = 0
         console.log(data)
     }
+    
     function resetGame(button = false) {
         data = {
             "letters": {},
@@ -378,10 +388,10 @@
         typingInput.focus();
         quote = processQuote(quotes)
         upcoming_words = quote.trim().split(" ");
-        current_word = "";
+        current_word = ""; // advanceWord() sets this to first word in quote
         finished_words = [];
-        last_i = 0;
-        advanceWord()
+        // last_i = 0; 
+        advanceWord() // move to next word and record words and mistyped words in data
         updateUpcomingLetter()
         new_game = true
         start = settings.auto_restart_clock ? Date.now() : null;
@@ -396,17 +406,19 @@
         last_input = "";
     }
 
-    function recordCharacterOccurence() {
-        if (data["letters"].hasOwnProperty(upcoming_letter)) {
-            data["letters"][upcoming_letter] += 1
+    function recordCharacterOccurence(character = upcoming_letter) {
+        console.log("recording ", character)
+        if (data["letters"].hasOwnProperty(character)) {
+            data["letters"][character] += 1
         } else {
-            data["letters"][upcoming_letter] = 1
+            data["letters"][character] = 1
         }
     }
 
     function updateUpcomingLetter() {
         upcoming_letter = current_word[last_i] || "˽";
     }
+
     const [
         gameContainer,
         gameHeaderContainer,
@@ -442,19 +454,19 @@
         upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
     }
 
-    function accuracy() {
+    function getAccuracy() {
         let total_letters = 0;
         let total_mistyped = 0;
         for (let letter in data["letters"]) {
             total_letters += data.letters[letter]
         }
         for (let letter in data["letter_mistypes"]) {
-            for(let other_letter in data["letter_mistypes"][letter]){
+            for (let other_letter in data["letter_mistypes"][letter]) {
                 total_mistyped += data.letter_mistypes[letter][other_letter]
             }
         }
         // console.log(total_letters, total_mistyped)
-        if (total_letters === 0){
+        if (total_letters === 0) {
             return 100
         }
         return (((total_letters - total_mistyped) / total_letters) * 100)
@@ -467,27 +479,30 @@
     if (settings.quote_collection) {
         quotes = quote_collection[settings.quote_collection]
     }
-    //TODO - combine with resetGame
 
-    let quote,
-        data,
-        upcoming_letter,
-        upcoming_words,
-        current_word,
-        finished_words,
-        new_game,
-        start,
-        speed_update_interval,
+
+    let quote, // text to practice typing on
+        data, // object containing letter and word frequencies, errors and speed
+        upcoming_letter, // next letter required to type
+        upcoming_words, // list of upcoming words in quote, seperated by spaces
+        current_word, // current word to type correctly
+        finished_words, // words completed (or skipped)
+        new_game, // set to true before a new game begins
+        start, // timestamp of the instant the game begins
+        speed_update_interval, // setInterval() for updating the speed and accuracy Counters 
         seconds_since_start,
-        game_clock,
-        speed,
-        pauseTimes,
-        resumeTimes,
-        last_i,
-        error_was_typed,
-        current_word_mistyped,
-        last_input,
-        time_of_button_press;
+        game_clock, // setInterval() for regularly updating values other than speed and accuracy (countdown and elapsed time) 
+        speed, // wpm calculation - updated by game_clock
+        // used together to calculate play time
+        pauseTimes, // list of recorded timestamps of times paused 
+        resumeTimes, // list of recorded timestamps of times resumed
+        time_of_button_press, // timestamp of last character typed
+        last_i, // index after last correctly typed character AKA the count of correctly typed letters
+        error_was_typed, // is true until first currently incorrectly typed character is corrected
+        current_word_mistyped, // true when current word been recorded in data as mistyped so as not to re-record 
+        last_input, // text of the last state of the input field
+        accuracy; // (total-chars-encountered - total-chars-mistyped) / total-chars-encountered * 100
+
     resetGame()
     updateGameDisplay()
     if (settings.pause_on_mouseout) {
@@ -495,7 +510,7 @@
     }
 
     typingInput.addEventListener("input", function (e) {
-        if(!settings.insert_mode){
+        if (!settings.insert_mode) {
             e.target.value = last_input
         }
         if (new_game) {
@@ -508,12 +523,13 @@
                 seconds_since_start = Math.floor((current_time - start) / 1000);
                 speed = calculate_speed()
                 if (settings.show_countdown) {
-                    let countdown_time = settings.countdown_time - seconds_since_start;
+                    let countdown = settings.countdown_time || 60;
+                    let countdown_time = countdown - seconds_since_start;
                     if (settings.pause_countdown_on_pause) {
-                        countdown_time = settings.countdown_time - Math.floor(calculatePlayTime("seconds"))
+                        countdown_time = countdown - Math.floor(calculatePlayTime("seconds"))
                     }
                     countdownTimerCounter.innerText = countdown_time
-                    if (countdown_time <= 0) {
+                    if (settings.end_after_countdown && countdown_time <= 0) {
                         resetGame()
                         updateGameDisplay()
                     }
@@ -538,22 +554,31 @@
                     speed_update_interval = setInterval(function () {
                         speedCounter.innerText = settings.wpm_label + " " + speed;
                         //TODO - this should be moved to somewhere less expensive 
-                        accuracyCounter.innerText = Math.floor(accuracy()) + "%"
+                        accuracy = getAccuracy()
+                        minacc = settings.minimum_accuracy || 80
+                        if (settings.end_below_accuracy && accuracy < minacc) {
+                            resetGame()
+                            updateGameDisplay()
+                        }
+                        accuracyCounter.innerText = Math.floor(accuracy) + "%"
                     }, interval)
                 }
             }
             new_game = false;
         }
         time_of_button_press = Date.now()
+        // record typed letters into input and timestamp
         if (last_input.length < e.target.value.length) {
             data.all_presses.push([e.target.value.slice(-1), time_of_button_press])
         } else {
+            // record number of letters backspaced via ctrl+backspace 
             let backspace_len = last_input.length - e.target.value.length
             data.all_presses.push([backspace_len + "<BS>", time_of_button_press])
         }
 
         if (e.target.value.length === last_i + 1
-            && last_input.length < e.target.value.length) {
+            && last_input.length < e.target.value.length
+            && (settings.advance_on_space && e.target.value.slice(-1) !== " ")) {
             recordCharacterOccurence()
         }
 
@@ -562,20 +587,13 @@
             && e.target.value !== current_word + " "
             && !error_was_typed) {
             error_was_typed = true
-            if (!current_word_mistyped) {
-                if (data["word_mistypes"].hasOwnProperty(current_word)) {
-                    data["word_mistypes"][current_word] += 1
-                }
-                else {
-                    data["word_mistypes"][current_word] = 1
-                }
-            }
-            current_word_mistyped = true
+            current_word_mistyped = true // recorded in data when word advances
             let incorrect_type = e.target.value.charAt(last_i)
             let err_char = (incorrect_type !== " ")
                 ? incorrect_type
                 : "˽"
             errorLetterDisplay.innerText = err_char
+            // TODO - turn this word salad into functions
             if (!data["letter_mistypes"].hasOwnProperty(upcoming_letter)) {
                 data["letter_mistypes"][upcoming_letter] = {}
             }
@@ -584,7 +602,6 @@
             } else {
                 data["letter_mistypes"][upcoming_letter][incorrect_type] += 1
             }
-            // recordCharacterOccurence()
             console.log("mistyped char: ", incorrect_type)
         } else if (e.target.value.length <= last_i) {
             error_was_typed = false
@@ -596,15 +613,15 @@
             resumeGame()
         }
 
-        //for every index from end to beginning
+        //for every index from END to BEGINNING
         for (let i = current_word.length; i >= 0; i--) {
             // if the slice from the beginning til that index matched the current word's
             //first match can break
             if (e.target.value.slice(0, i) === current_word.slice(0, i)) {
-                // if the index is higher than the last one 
+                // if more of the word has been typed correctly 
                 if (i > last_i
                     // or if the length of typed text is less than 'highest matched index'
-                    // with completed off
+                    // meaning we BACKSPACED over CORRECTLY TYPED LETTERS
                     || (e.target.value.length < last_i
                         && !settings.keep_completed_letters)) {
                     //reset highest index to current index
@@ -612,7 +629,10 @@
                     // recordCharacterOccurence()
                     updateUpcomingLetter()
                 }
+                //if we're not advancing the word
                 if (e.target.value !== current_word + " ") {
+                    //if we've backspaced over correctly typed letters
+                    //reset the correctly typed letters in the input
                     if (settings.keep_completed_letters
                         && e.target.value.length > last_input.length
                         && i < last_i) {
@@ -628,14 +648,40 @@
         }
 
 
-        if (settings.show_wpm && settings.speed_and_accuracy_update === "ON_TYPE") {
-            speed = calculate_speed(completed_letters = last_i)
+        if (settings.show_wpm
+            && settings.speed_and_accuracy_update === "ON_TYPE") {
             speedCounter.innerText = settings.wpm_label + " " + speed;
         }
         if (e.target.value === current_word + " "
-            || (!settings.advance_on_space && (last_i === current_word.length))
+            || (e.target.value === current_word && !settings.advance_on_space)
             || settings.advance_with_errors && e.target.value.slice(-1) === " "
         ) {
+            // TODO - turn this word salad into functions
+            if (settings.advance_with_errors) {
+                //current_word[last_i] is already counted as a mistyped space
+                let skipped_chars = current_word.slice(last_i).split("")
+                console.log(skipped_chars)
+                if (skipped_chars !== []) {
+                    if (data["word_mistypes"].hasOwnProperty(current_word)) {
+                        data["word_mistypes"][current_word] += 1
+                    }
+                    else {
+                        data["word_mistypes"][current_word] = 1
+                    }
+                    for (let char of skipped_chars) {
+                        recordCharacterOccurence(char)
+                        if (!data["letter_mistypes"].hasOwnProperty(char)) {
+                            data["letter_mistypes"][char] = {}
+                        }
+                        if (!data["letter_mistypes"][char].hasOwnProperty("<blank>")) {
+                            data["letter_mistypes"][char]["<blank>"] = 1
+                        } else {
+                            data["letter_mistypes"][char]["<blank>"] += 1
+                        }
+                    }
+                }
+            }
+
             if (settings.show_wpm && settings.speed_and_accuracy_update === "ON_WORD") {
                 speedCounter.innerText = settings.wpm_label + " " + speed;
             }
@@ -649,7 +695,6 @@
                 else
                     resetGame(button = true)
             } else {
-                last_i = 0
                 advanceWord()
                 updateUpcomingLetter()
             }

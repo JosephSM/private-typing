@@ -1,20 +1,23 @@
 const wpm_update_options = ["ON_TYPE", "ON_WORD", "TIME_ELAPSE", "ON_CLOCK", "CONSTANT"]
 
 let settings = {
-    quote_collection:"Benjamin Franklin",
-    insert_mode: true, 
+    quote_collection: "Benjamin Franklin",
+    insert_mode: true,
     word_length: 5, // done
     speed_and_accuracy_update: "CONSTANT", // done - change "onclock"
     speed_and_accuracy_update_interval: 50, // done
     advance_on_space: true, // done
     show_upcoming_letter: true, // done
     show_countdown: false, //done
+    end_after_countdown: true,
+    end_below_accuracy: false,
+    minimum_accuracy: 80,
     pause_countdown_on_pause: true, // done
     keep_completed_letters: false,
     show_word_history: true, // done
     show_elapsed: true, // done
     show_wpm: true, //done
-    show_accuracy:true, 
+    show_accuracy: true,
     elapsed_label: "", // done
     show_total_elapsed: false, // done
     pause_timer_between_words: false, // done 
@@ -23,7 +26,7 @@ let settings = {
     countdown_time: 30, // done
     show_preview: true, // done
     show_punctuation: true, // done
-    show_error_letter:true,
+    show_error_letter: true,
     show_capitalization: true, // done
     no_spaces: false, // done
     wpm_label: "", // done 
@@ -50,8 +53,8 @@ let settings = {
     // auto_quote: false,
     game_type: "NORMAL",
     replay_on_condition: false, // didn't reach a threshold wpm, 
-    win_on_space:true,
-    win_on_enter:true,
+    win_on_space: true,
+    win_on_enter: true,
     show_error_history: false,
     game_width: "NORMAL",
     max_width: "", //
@@ -78,5 +81,5 @@ let settings = {
     min_wpm: false,
     min_accuracy: false,
     disable_backspace: false,
-    show_only_next_letter:false,
+    show_only_next_letter: false,
 }
