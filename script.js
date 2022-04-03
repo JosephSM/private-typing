@@ -1,7 +1,12 @@
 (function the_game() {
 
+    // TODO
+    function removeUntypables(){
+        let untypeables = "—"
+    }
+
     function removePunctuation(str) {
-        return str.replace(/[.,'\/#!?$%\^&\*;:{}=\-_`~()]/g, "")
+        return str.replace(/[.,'\/#!?$%\^&\*;:{}=—\-_`~()]/g, "")
             .replace(/\s{2,}/g, " ")
     }
 
@@ -88,7 +93,7 @@
         }
 
         if (settings.no_spaces) {
-            console.log(quote.split(" "));
+            // console.log(quote.split(" "));
             quote = quote.split(" ").join("");
         }
 
@@ -157,6 +162,9 @@
         const speedCounter = document.createElement("h1");
         speedCounter.setAttribute("id", "speedCounter");
         speedCounter.classList.add("counter")
+        const accuracyCounter = document.createElement("h1");
+        accuracyCounter.setAttribute("id", "accuracyCounter");
+        accuracyCounter.classList.add("counter")
         const elapsedTimeCounter = document.createElement("h1");
         elapsedTimeCounter.setAttribute("id", "elapsedTimeCounter");
         elapsedTimeCounter.classList.add("counter")
@@ -166,6 +174,9 @@
         const upcomingLetterDisplay = document.createElement("h1");
         upcomingLetterDisplay.setAttribute("id", "upcomingLetterDisplay");
         upcomingLetterDisplay.classList.add("counter")
+        const errorLetterDisplay = document.createElement("h1");
+        errorLetterDisplay.setAttribute("id", "errorLetterDisplay");
+        errorLetterDisplay.classList.add("counter")
 
         gameContainer.appendChild(typingText);
         gameContainer.appendChild(textPreview);
@@ -176,8 +187,12 @@
             gameHeaderContainer.appendChild(elapsedTimeCounter);
         if (settings.show_wpm)
             gameHeaderContainer.appendChild(speedCounter);
+        if (settings.show_accuracy)
+            gameHeaderContainer.appendChild(accuracyCounter);
         if (settings.show_upcoming_letter)
             gameHeaderContainer.appendChild(upcomingLetterDisplay);
+        if (settings.show_error_letter)
+            gameHeaderContainer.appendChild(errorLetterDisplay);
 
 
         const scoreContainer = document.createElement("div");
@@ -208,8 +223,10 @@
             typingInput,
             elapsedTimeCounter,
             speedCounter,
+            accuracyCounter,
             countdownTimerCounter,
             upcomingLetterDisplay,
+            errorLetterDisplay,
             scoreContainer,
             scoreBoard
         ]
@@ -250,10 +267,10 @@
     function pauseGame(style = true) {
         // only pause a game if it has started
         // or not already paused
-        console.log("pause called" + start)
-        console.log(pauseTimes)
-        console.log(resumeTimes)
+        // console.log(pauseTimes)
+        // console.log(resumeTimes)
         if (start && pauseTimes.length === resumeTimes.length) {
+            console.log("pause called " + start)
             if (style)
                 gameContainer.style = "background-color:grey;"
             pauseTimes.push(Date.now());
@@ -289,7 +306,7 @@
         return playtime
     }
 
-    function calculate_speed(completed_letters = last_i + 1) {
+    function calculate_speed(completed_letters = last_i) {
         //TODO - make this clearer
         return Math.round(
             ((finished_words.join(" ").length + completed_letters) / settings.word_length)
@@ -327,10 +344,25 @@
         }
     }
     function advanceWord() {
+        current_word_mistyped = false;
         finished_words.push(current_word);
         current_word = upcoming_words.shift();
+        let current_word_unpunct = removePunctuation(current_word)
+        if (data["words"].hasOwnProperty(current_word_unpunct)) {
+            data["words"][current_word_unpunct] += 1
+        } else {
+            data["words"][current_word_unpunct] = 1
+        }
+        console.log(data)
     }
     function resetGame(button = false) {
+        data = {
+            "letters": {},
+            "words": {},
+            "word_mistypes": {},
+            "letter_mistypes": {},
+            "all_presses": []
+        }
         if (button) {
             createDialog("play-again", "Play Again?", "Play")
         }
@@ -340,6 +372,7 @@
             clearInterval(game_clock)
         typingInput.value = ""
         speedCounter.innerText = 0;
+        accuracyCounter.innerText = "100%";
         elapsedTimeCounter.innerText = 0;
         countdownTimerCounter.innerText = settings.countdown_time
         typingInput.focus();
@@ -347,7 +380,9 @@
         upcoming_words = quote.trim().split(" ");
         current_word = "";
         finished_words = [];
+        last_i = 0;
         advanceWord()
+        updateUpcomingLetter()
         new_game = true
         start = settings.auto_restart_clock ? Date.now() : null;
         speed_update_interval = null;
@@ -357,9 +392,21 @@
         speed = 0;
         pauseTimes = []
         resumeTimes = []
-        last_i = 0;
+        error_was_typed = false;
+        last_input = "";
     }
 
+    function recordCharacterOccurence() {
+        if (data["letters"].hasOwnProperty(upcoming_letter)) {
+            data["letters"][upcoming_letter] += 1
+        } else {
+            data["letters"][upcoming_letter] = 1
+        }
+    }
+
+    function updateUpcomingLetter() {
+        upcoming_letter = current_word[last_i] || "˽";
+    }
     const [
         gameContainer,
         gameHeaderContainer,
@@ -371,8 +418,10 @@
         typingInput,
         elapsedTimeCounter,
         speedCounter,
+        accuracyCounter,
         countdownTimerCounter,
         upcomingLetterDisplay,
+        errorLetterDisplay,
         scoreContainer,
         scoreBoard
     ] = createGameElements();
@@ -382,30 +431,46 @@
             completedText.innerText = finished_words.join(" ");
         }
         // can this be simplified?
-        console.log(last_i, input.length);
+        // console.log(last_i, input.length);
         [].forEach.call(document.querySelectorAll(".liveText"), (elem) => {
             elem.querySelector(".rightText").innerText = current_word.slice(0, last_i);
             elem.querySelector(".wrongText").innerText = current_word.slice(last_i, input.length);
             elem.querySelector(".restText").innerText = current_word.slice(Math.max(input.length, last_i))
         })
-        upcoming_letter = current_word[last_i] || "˽";
         upcomingLetterDisplay.innerText = upcoming_letter
         upcomingText.innerText = upcoming_words.join(" ");
         upcomingPreview.innerText = upcoming_words.slice(0, settings.preview_length).join(" ");
+    }
+
+    function accuracy() {
+        let total_letters = 0;
+        let total_mistyped = 0;
+        for (let letter in data["letters"]) {
+            total_letters += data.letters[letter]
+        }
+        for (let letter in data["letter_mistypes"]) {
+            for(let other_letter in data["letter_mistypes"][letter]){
+                total_mistyped += data.letter_mistypes[letter][other_letter]
+            }
+        }
+        // console.log(total_letters, total_mistyped)
+        if (total_letters === 0){
+            return 100
+        }
+        return (((total_letters - total_mistyped) / total_letters) * 100)
     }
 
     document.body.appendChild(gameContainer);
     document.body.appendChild(scoreContainer);
     // const collections = Object.keys()
     let quotes = quote_collection["Harry Potter"]
-    if (settings.quotes) {
+    if (settings.quote_collection) {
         quotes = quote_collection[settings.quote_collection]
     }
     //TODO - combine with resetGame
 
-    let data = { "letters": {} }
-
     let quote,
+        data,
         upcoming_letter,
         upcoming_words,
         current_word,
@@ -418,9 +483,11 @@
         speed,
         pauseTimes,
         resumeTimes,
-        last_i;
-
-    let last_input = "";
+        last_i,
+        error_was_typed,
+        current_word_mistyped,
+        last_input,
+        time_of_button_press;
     resetGame()
     updateGameDisplay()
     if (settings.pause_on_mouseout) {
@@ -428,10 +495,14 @@
     }
 
     typingInput.addEventListener("input", function (e) {
+        if(!settings.insert_mode){
+            e.target.value = last_input
+        }
         if (new_game) {
             if (!start) {
-                start = Date.now()
+                start = time_of_button_press = Date.now()
             }
+            //TODO: rename this
             game_clock = setInterval(function () {
                 current_time = Date.now()
                 seconds_since_start = Math.floor((current_time - start) / 1000);
@@ -456,21 +527,70 @@
             }, 100)
 
             if (settings.show_wpm) {
-                if (settings.wpm_update !== "ON_WORD"
-                    && settings.wpm_update !== "ON_TYPE") {
-                    let interval = settings.wpm_update_interval
-                    if (settings.wpm_update === "ON_CLOCK") {
+                if (settings.speed_and_accuracy_update !== "ON_WORD"
+                    && settings.speed_and_accuracy_update !== "ON_TYPE") {
+                    let interval = settings.speed_and_accuracy_update_interval
+                    if (settings.speed_and_accuracy_update === "ON_CLOCK") {
                         interval = 1000;
-                    } else if (settings.wpm_update === "CONSTANT") {
+                    } else if (settings.speed_and_accuracy_update === "CONSTANT") {
                         interval = 100;
                     }
                     speed_update_interval = setInterval(function () {
                         speedCounter.innerText = settings.wpm_label + " " + speed;
+                        //TODO - this should be moved to somewhere less expensive 
+                        accuracyCounter.innerText = Math.floor(accuracy()) + "%"
                     }, interval)
                 }
             }
             new_game = false;
         }
+        time_of_button_press = Date.now()
+        if (last_input.length < e.target.value.length) {
+            data.all_presses.push([e.target.value.slice(-1), time_of_button_press])
+        } else {
+            let backspace_len = last_input.length - e.target.value.length
+            data.all_presses.push([backspace_len + "<BS>", time_of_button_press])
+        }
+
+        if (e.target.value.length === last_i + 1
+            && last_input.length < e.target.value.length) {
+            recordCharacterOccurence()
+        }
+
+        if (e.target.value.length >= last_i + 1
+            && e.target.value.charAt(last_i) !== upcoming_letter
+            && e.target.value !== current_word + " "
+            && !error_was_typed) {
+            error_was_typed = true
+            if (!current_word_mistyped) {
+                if (data["word_mistypes"].hasOwnProperty(current_word)) {
+                    data["word_mistypes"][current_word] += 1
+                }
+                else {
+                    data["word_mistypes"][current_word] = 1
+                }
+            }
+            current_word_mistyped = true
+            let incorrect_type = e.target.value.charAt(last_i)
+            let err_char = (incorrect_type !== " ")
+                ? incorrect_type
+                : "˽"
+            errorLetterDisplay.innerText = err_char
+            if (!data["letter_mistypes"].hasOwnProperty(upcoming_letter)) {
+                data["letter_mistypes"][upcoming_letter] = {}
+            }
+            if (!data["letter_mistypes"][upcoming_letter].hasOwnProperty(incorrect_type)) {
+                data["letter_mistypes"][upcoming_letter][incorrect_type] = 1
+            } else {
+                data["letter_mistypes"][upcoming_letter][incorrect_type] += 1
+            }
+            // recordCharacterOccurence()
+            console.log("mistyped char: ", incorrect_type)
+        } else if (e.target.value.length <= last_i) {
+            error_was_typed = false
+            errorLetterDisplay.innerText = ""
+        }
+
 
         if (pauseTimes.length > resumeTimes.length) {
             resumeGame()
@@ -489,9 +609,11 @@
                         && !settings.keep_completed_letters)) {
                     //reset highest index to current index
                     last_i = i;
+                    // recordCharacterOccurence()
+                    updateUpcomingLetter()
                 }
                 if (e.target.value !== current_word + " ") {
-                    if (settings.keep_completed_letters 
+                    if (settings.keep_completed_letters
                         && e.target.value.length > last_input.length
                         && i < last_i) {
                         e.target.value = current_word.slice(0, last_i)
@@ -505,15 +627,16 @@
             }
         }
 
-        if (settings.show_wpm && settings.wpm_update === "ON_TYPE") {
-            speed = calculate_speed(completed_letters = last_i + 1)
+
+        if (settings.show_wpm && settings.speed_and_accuracy_update === "ON_TYPE") {
+            speed = calculate_speed(completed_letters = last_i)
             speedCounter.innerText = settings.wpm_label + " " + speed;
         }
         if (e.target.value === current_word + " "
             || (!settings.advance_on_space && (last_i === current_word.length))
             || settings.advance_with_errors && e.target.value.slice(-1) === " "
         ) {
-            if (settings.show_wpm && settings.wpm_update === "ON_WORD") {
+            if (settings.show_wpm && settings.speed_and_accuracy_update === "ON_WORD") {
                 speedCounter.innerText = settings.wpm_label + " " + speed;
             }
             if (settings.pause_timer_between_words) {
@@ -528,6 +651,7 @@
             } else {
                 last_i = 0
                 advanceWord()
+                updateUpcomingLetter()
             }
             e.target.value = "";
             updateGameDisplay();

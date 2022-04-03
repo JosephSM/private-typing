@@ -2,9 +2,10 @@ const wpm_update_options = ["ON_TYPE", "ON_WORD", "TIME_ELAPSE", "ON_CLOCK", "CO
 
 let settings = {
     quote_collection:"Benjamin Franklin",
+    insert_mode: true, 
     word_length: 5, // done
-    wpm_update: "ON_CLOCK", // done - change "onclock"
-    wpm_update_interval: 50, // done
+    speed_and_accuracy_update: "CONSTANT", // done - change "onclock"
+    speed_and_accuracy_update_interval: 50, // done
     advance_on_space: true, // done
     show_upcoming_letter: true, // done
     show_countdown: false, //done
@@ -13,6 +14,7 @@ let settings = {
     show_word_history: true, // done
     show_elapsed: true, // done
     show_wpm: true, //done
+    show_accuracy:true, 
     elapsed_label: "", // done
     show_total_elapsed: false, // done
     pause_timer_between_words: false, // done 
@@ -20,7 +22,8 @@ let settings = {
     allow_incorrect_letters: true, // done
     countdown_time: 30, // done
     show_preview: true, // done
-    show_punctuation: false, // done
+    show_punctuation: true, // done
+    show_error_letter:true,
     show_capitalization: true, // done
     no_spaces: false, // done
     wpm_label: "", // done 
@@ -75,4 +78,5 @@ let settings = {
     min_wpm: false,
     min_accuracy: false,
     disable_backspace: false,
+    show_only_next_letter:false,
 }
