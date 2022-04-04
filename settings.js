@@ -12,7 +12,7 @@ let settings = {
     end_below_accuracy: false, // done
     minimum_accuracy: 80, //done
     pause_countdown_on_pause: true, // done
-    keep_completed_letters: false,
+    keep_completed_letters: true,
     show_word_history: true, // done
     show_elapsed: true, // done
     show_wpm: true, //done
@@ -81,5 +81,5 @@ let settings = {
     min_accuracy: false,
     disable_backspace: false,
     show_only_next_letter: false,
-    enable_paste:false
+    enable_paste: false
 }

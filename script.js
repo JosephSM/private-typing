@@ -345,12 +345,7 @@
 
     function advanceWord() {
         if (current_word_mistyped) {
-            if (data["word_mistypes"].hasOwnProperty(current_word)) {
-                data["word_mistypes"][current_word] += 1
-            }
-            else {
-                data["word_mistypes"][current_word] = 1
-            }
+            recordMistypedWord(word = current_word)
             current_word_mistyped = false;
         }
         finished_words.push(current_word);
@@ -390,7 +385,7 @@
             quotes = quote_collection[settings.quote_collection]
         } else {
             quotes = quote_collection["Harry Potter"]
-        }    
+        }
         quote = processQuote(quotes)
         upcoming_words = quote.trim().split(" ");
         current_word = ""; // advanceWord() sets this to first word in quote
@@ -409,6 +404,7 @@
         resumeTimes = []
         error_was_typed = false;
         last_input = "";
+        updateGameDisplay()
     }
 
     function recordCharacterOccurence(character = upcoming_letter) {
@@ -417,6 +413,26 @@
             data["letters"][character] += 1
         } else {
             data["letters"][character] = 1
+        }
+    }
+
+    function recordMistypedCharacter(character = upcoming_letter, err_char = err_char) {
+        if (!data["letter_mistypes"].hasOwnProperty(character)) {
+            data["letter_mistypes"][character] = {}
+        }
+        if (!data["letter_mistypes"][character].hasOwnProperty(err_char)) {
+            data["letter_mistypes"][character][err_char] = 1
+        } else {
+            data["letter_mistypes"][character][err_char] += 1
+        }
+        console.log("mistyped char: ", err_char)
+    }
+    function recordMistypedWord(word = current_word) {
+        if (data["word_mistypes"].hasOwnProperty(word)) {
+            data["word_mistypes"][word] += 1
+        }
+        else {
+            data["word_mistypes"][word] = 1
         }
     }
 
@@ -490,7 +506,6 @@
             countdownTimerCounter.innerText = countdown_time
             if (settings.end_after_countdown && countdown_time <= 0) {
                 resetGame()
-                updateGameDisplay()
             }
         }
         if (settings.show_total_elapsed) {
@@ -508,11 +523,10 @@
         minacc = settings.minimum_accuracy || 80
         if (settings.end_below_accuracy && accuracy < minacc) {
             resetGame()
-            updateGameDisplay()
         }
         accuracyCounter.innerText = Math.floor(accuracy) + "%"
     }
-    
+
 
     document.body.appendChild(gameContainer);
     document.body.appendChild(scoreContainer);
@@ -535,13 +549,11 @@
         resumeTimes, // list of recorded timestamps of times resumed
         time_of_button_press, // timestamp of last character typed
         last_i, // index AFTER last correctly typed character AKA the count of correctly typed letters
-        error_was_typed, // is true until first currently incorrectly typed character is corrected
         current_word_mistyped, // true when current word been recorded in data as mistyped so as not to re-record 
         last_input, // text of the last state of the input field
         accuracy; // (total-chars-encountered - total-chars-mistyped) / total-chars-encountered * 100
 
     resetGame()
-    updateGameDisplay()
     if (settings.pause_on_mouseout) {
         typingInput.addEventListener("focusout", pauseGame)
     }
@@ -580,88 +592,62 @@
             let backspace_len = last_input.length - e.target.value.length
             data.all_presses.push([backspace_len + "<BS>", time_of_button_press])
         }
-        
-        // if you just typed one letter more than
-        // the last correctly typed letter
+
+        // DO NOT REFERENCE -- last_i -- BEFORE THIS POINT
         if (e.target.value.length === last_i + 1
-            && last_input.length < e.target.value.length
-            // and you're not advancing
-            // TODO - review this
-            && (settings.advance_on_space && e.target.value.slice(-1) !== " ")) {
+            && last_input.length < e.target.value.length) {
             recordCharacterOccurence()
         }
-        
-        // if you've typed at least 1 incorrect character
-        console.log("last i = ", last_i, e.target.value.charAt(last_i))
-        if (e.target.value.length >= last_i + 1
-            // and character typed is incorrect
-            && e.target.value.charAt(last_i) !== upcoming_letter
-            // and we're not advancing
-            && e.target.value !== current_word + " "
-            // and we've not already recorded the error
-            && !error_was_typed) {
-                error_was_typed = true
-                current_word_mistyped = true // recorded in data when word advances
-                let incorrect_type = e.target.value.charAt(last_i)
-                let err_char = (incorrect_type !== " ")
-                    ? incorrect_type
-                    : "˽"
-                errorLetterDisplay.innerText = err_char
-
-                // TODO - turn this word salad into functions
-                if (!data["letter_mistypes"].hasOwnProperty(upcoming_letter)) {
-                    data["letter_mistypes"][upcoming_letter] = {}
-                }
-                if (!data["letter_mistypes"][upcoming_letter].hasOwnProperty(incorrect_type)) {
-                    data["letter_mistypes"][upcoming_letter][incorrect_type] = 1
-                } else {
-                    data["letter_mistypes"][upcoming_letter][incorrect_type] += 1
-                }
-                console.log("mistyped char: ", incorrect_type)
-        // if backspaced over last correct letter
-        } else if (e.target.value.length <= last_i) {
-            error_was_typed = false
-            errorLetterDisplay.innerText = ""
-        }
-
-        if (pauseTimes.length > resumeTimes.length) {
-            resumeGame()
-        }
-
         //for every index from END to BEGINNING
         for (let i = current_word.length; i >= 0; i--) {
             // if the slice from the beginning til that index matched the current word's
             //first match can break
             if (e.target.value.slice(0, i) === current_word.slice(0, i)) {
                 // if more of the word has been typed correctly 
-                if (i > last_i
-                    // or if the length of typed text is less than 'highest matched index'
-                    // meaning we BACKSPACED over CORRECTLY TYPED LETTERS
-                    || (e.target.value.length < last_i
-                        && !settings.keep_completed_letters)) {
-                    //reset highest index to current index
+                if (i > last_i) {
                     last_i = i;
-                    // recordCharacterOccurence()
-                    updateUpcomingLetter()
                 }
-                //if we're not advancing the word
-                if (e.target.value !== current_word + " ") {
-                    //if we've backspaced over correctly typed letters
-                    //reset the correctly typed letters in the input
-                    if (settings.keep_completed_letters
-                        && e.target.value.length > last_input.length
-                        && i < last_i) {
-                        e.target.value = current_word.slice(0, last_i)
-                    }
-                    if (!settings.allow_incorrect_letters) {
-                        e.target.value = current_word.slice(0, last_i)
+                // if we BACKSPACED over CORRECTLY TYPED LETTERS
+                else if (i < last_i) {
+                    if (settings.keep_completed_letters) {
+                        // and typing (not backspacing)
+                        if (e.target.value.length > last_input.length) {
+                            e.target.value = current_word.slice(0, last_i)
+                        }
+                    } else {
+                        last_i = i;
                     }
                 }
+                updateUpcomingLetter()
                 updateGameDisplay()
                 break;
             }
         }
 
+        // console.log("last i = ", last_i, e.target.value.charAt(last_i))
+
+        //if we're not advancing the word
+        if (e.target.value !== current_word + " ") {
+            if (!settings.allow_incorrect_letters) {
+                e.target.value = current_word.slice(0, last_i)
+            }
+            if (e.target.value.length === last_i + 1
+                && last_input.length < e.target.value.length) {
+                let incorrect_type = e.target.value.slice(-1)
+                let err_char = (incorrect_type !== " ")
+                    ? incorrect_type
+                    : "˽"
+                recordMistypedCharacter(character = upcoming_letter, err_char = err_char)
+                errorLetterDisplay.innerText = err_char
+                current_word_mistyped = true // recorded in data when word advances
+            } else if (e.target.value.length <= last_i) {
+                errorLetterDisplay.innerText = ""
+            }
+        }
+
+        if (pauseTimes.length > resumeTimes.length) {
+            resumeGame()
+        }
 
         if (settings.show_wpm
             && settings.speed_and_accuracy_update === "ON_TYPE") {
@@ -669,39 +655,22 @@
         }
         if (e.target.value === current_word + " "
             || (e.target.value === current_word && !settings.advance_on_space)
-            || settings.advance_with_errors && e.target.value.slice(-1) === " "
         ) {
             // TODO - turn this word salad into functions
-            if (settings.advance_with_errors) {
+            if (settings.advance_with_errors && e.target.value.slice(-1) === " ") {
                 //current_word[last_i] is already counted as a mistyped space
-                let skipped_chars = current_word.slice(last_i).split("")
+                let skipped_chars = current_word.slice(last_i + 1).split("")
                 console.log(skipped_chars)
                 if (skipped_chars !== []) {
-                    if (data["word_mistypes"].hasOwnProperty(current_word)) {
-                        data["word_mistypes"][current_word] += 1
-                    }
-                    else {
-                        data["word_mistypes"][current_word] = 1
-                    }
                     for (let char of skipped_chars) {
                         recordCharacterOccurence(char)
-                        if (!data["letter_mistypes"].hasOwnProperty(char)) {
-                            data["letter_mistypes"][char] = {}
-                        }
-                        if (!data["letter_mistypes"][char].hasOwnProperty("<blank>")) {
-                            data["letter_mistypes"][char]["<blank>"] = 1
-                        } else {
-                            data["letter_mistypes"][char]["<blank>"] += 1
-                        }
+                        recordMistypedCharacter(char, err_char = "<blank>")
                     }
                 }
             }
 
             if (settings.show_wpm && settings.speed_and_accuracy_update === "ON_WORD") {
                 speedCounter.innerText = settings.wpm_label + " " + speed;
-            }
-            if (settings.pause_timer_between_words) {
-                pauseGame()
             }
             if (upcoming_words.length === 0) {
                 win();
@@ -710,11 +679,14 @@
                 else
                     resetGame(button = true)
             } else {
+                if (settings.pause_timer_between_words) {
+                    pauseGame()
+                }
                 advanceWord()
                 updateUpcomingLetter()
+                e.target.value = "";
+                updateGameDisplay();
             }
-            e.target.value = "";
-            updateGameDisplay();
         }
         last_input = e.target.value;
     })
