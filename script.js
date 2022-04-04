@@ -307,12 +307,11 @@
     }
 
     function calculate_speed(completed_letters = last_i) {
-        //TODO - make this clearer
+        //TODO - consider Math.truncate()
         return Math.round(
             ((finished_words.join(" ").length + completed_letters) / settings.word_length)
             / calculatePlayTime("minutes"));
     }
-
 
     function checkTime(i) {
         if (i < 10) {
@@ -343,6 +342,7 @@
             scoreBoard.insertBefore(tr, scoreHeader.nextSibling)
         }
     }
+
     function advanceWord() {
         if (current_word_mistyped) {
             if (data["word_mistypes"].hasOwnProperty(current_word)) {
@@ -364,7 +364,7 @@
         last_i = 0
         console.log(data)
     }
-    
+
     function resetGame(button = false) {
         data = {
             "letters": {},
@@ -378,14 +378,19 @@
         }
         if (speed_update_interval)
             clearInterval(speed_update_interval)
-        if (game_clock)
-            clearInterval(game_clock)
+        if (time_and_countdown_interval)
+            clearInterval(time_and_countdown_interval)
         typingInput.value = ""
         speedCounter.innerText = 0;
         accuracyCounter.innerText = "100%";
         elapsedTimeCounter.innerText = 0;
         countdownTimerCounter.innerText = settings.countdown_time
         typingInput.focus();
+        if (settings.quote_collection) {
+            quotes = quote_collection[settings.quote_collection]
+        } else {
+            quotes = quote_collection["Harry Potter"]
+        }    
         quote = processQuote(quotes)
         upcoming_words = quote.trim().split(" ");
         current_word = ""; // advanceWord() sets this to first word in quote
@@ -397,7 +402,7 @@
         start = settings.auto_restart_clock ? Date.now() : null;
         speed_update_interval = null;
         seconds_since_start = null;
-        game_clock = null;
+        time_and_countdown_interval = null;
         current_time = null;
         speed = 0;
         pauseTimes = []
@@ -472,16 +477,48 @@
         return (((total_letters - total_mistyped) / total_letters) * 100)
     }
 
-    document.body.appendChild(gameContainer);
-    document.body.appendChild(scoreContainer);
-    // const collections = Object.keys()
-    let quotes = quote_collection["Harry Potter"]
-    if (settings.quote_collection) {
-        quotes = quote_collection[settings.quote_collection]
+    function timeAndCoundown() {
+        current_time = Date.now()
+        seconds_since_start = Math.floor((current_time - start) / 1000);
+        speed = calculate_speed()
+        if (settings.show_countdown) {
+            let countdown = settings.countdown_time || 60;
+            let countdown_time = countdown - seconds_since_start;
+            if (settings.pause_countdown_on_pause) {
+                countdown_time = countdown - Math.floor(calculatePlayTime("seconds"))
+            }
+            countdownTimerCounter.innerText = countdown_time
+            if (settings.end_after_countdown && countdown_time <= 0) {
+                resetGame()
+                updateGameDisplay()
+            }
+        }
+        if (settings.show_total_elapsed) {
+            elapsedTimeCounter.innerText = settings.elapsed_label + " " + seconds_since_start
+        }
+        if (settings.show_elapsed) {
+            elapsedTimeCounter.innerText = settings.elapsed_label + " " + Math.floor(calculatePlayTime("seconds"))
+        }
     }
 
+    function updateSpeedAndAccuracy() {
+        speedCounter.innerText = settings.wpm_label + " " + speed;
+        //TODO - this should be moved to somewhere less expensive 
+        accuracy = getAccuracy()
+        minacc = settings.minimum_accuracy || 80
+        if (settings.end_below_accuracy && accuracy < minacc) {
+            resetGame()
+            updateGameDisplay()
+        }
+        accuracyCounter.innerText = Math.floor(accuracy) + "%"
+    }
+    
 
-    let quote, // text to practice typing on
+    document.body.appendChild(gameContainer);
+    document.body.appendChild(scoreContainer);
+
+    let quotes, // list of quotes chosen by game
+        quote, // text to practice typing on
         data, // object containing letter and word frequencies, errors and speed
         upcoming_letter, // next letter required to type
         upcoming_words, // list of upcoming words in quote, seperated by spaces
@@ -491,13 +528,13 @@
         start, // timestamp of the instant the game begins
         speed_update_interval, // setInterval() for updating the speed and accuracy Counters 
         seconds_since_start,
-        game_clock, // setInterval() for regularly updating values other than speed and accuracy (countdown and elapsed time) 
-        speed, // wpm calculation - updated by game_clock
+        time_and_countdown_interval, // setInterval() for regularly updating values other than speed and accuracy (countdown and elapsed time) 
+        speed, // wpm calculation - updated by time_and_countdown_interval
         // used together to calculate play time
         pauseTimes, // list of recorded timestamps of times paused 
         resumeTimes, // list of recorded timestamps of times resumed
         time_of_button_press, // timestamp of last character typed
-        last_i, // index after last correctly typed character AKA the count of correctly typed letters
+        last_i, // index AFTER last correctly typed character AKA the count of correctly typed letters
         error_was_typed, // is true until first currently incorrectly typed character is corrected
         current_word_mistyped, // true when current word been recorded in data as mistyped so as not to re-record 
         last_input, // text of the last state of the input field
@@ -513,60 +550,28 @@
         if (!settings.insert_mode) {
             e.target.value = last_input
         }
+        time_of_button_press = Date.now()
+        if (!start) {
+            start = time_of_button_press
+        }
         if (new_game) {
-            if (!start) {
-                start = time_of_button_press = Date.now()
-            }
             //TODO: rename this
-            game_clock = setInterval(function () {
-                current_time = Date.now()
-                seconds_since_start = Math.floor((current_time - start) / 1000);
-                speed = calculate_speed()
-                if (settings.show_countdown) {
-                    let countdown = settings.countdown_time || 60;
-                    let countdown_time = countdown - seconds_since_start;
-                    if (settings.pause_countdown_on_pause) {
-                        countdown_time = countdown - Math.floor(calculatePlayTime("seconds"))
-                    }
-                    countdownTimerCounter.innerText = countdown_time
-                    if (settings.end_after_countdown && countdown_time <= 0) {
-                        resetGame()
-                        updateGameDisplay()
-                    }
-                }
-                if (settings.show_total_elapsed) {
-                    elapsedTimeCounter.innerText = settings.elapsed_label + " " + seconds_since_start
-                }
-                if (settings.show_elapsed) {
-                    elapsedTimeCounter.innerText = settings.elapsed_label + " " + Math.floor(calculatePlayTime("seconds"))
-                }
-            }, 100)
+            time_and_countdown_interval = setInterval(timeAndCoundown, 100)
 
             if (settings.show_wpm) {
                 if (settings.speed_and_accuracy_update !== "ON_WORD"
                     && settings.speed_and_accuracy_update !== "ON_TYPE") {
-                    let interval = settings.speed_and_accuracy_update_interval
+                    let interval = settings.speed_and_accuracy_update_interval || 100
                     if (settings.speed_and_accuracy_update === "ON_CLOCK") {
                         interval = 1000;
                     } else if (settings.speed_and_accuracy_update === "CONSTANT") {
                         interval = 100;
                     }
-                    speed_update_interval = setInterval(function () {
-                        speedCounter.innerText = settings.wpm_label + " " + speed;
-                        //TODO - this should be moved to somewhere less expensive 
-                        accuracy = getAccuracy()
-                        minacc = settings.minimum_accuracy || 80
-                        if (settings.end_below_accuracy && accuracy < minacc) {
-                            resetGame()
-                            updateGameDisplay()
-                        }
-                        accuracyCounter.innerText = Math.floor(accuracy) + "%"
-                    }, interval)
+                    speed_update_interval = setInterval(updateSpeedAndAccuracy, interval)
                 }
             }
             new_game = false;
         }
-        time_of_button_press = Date.now()
         // record typed letters into input and timestamp
         if (last_input.length < e.target.value.length) {
             data.all_presses.push([e.target.value.slice(-1), time_of_button_press])
@@ -575,39 +580,49 @@
             let backspace_len = last_input.length - e.target.value.length
             data.all_presses.push([backspace_len + "<BS>", time_of_button_press])
         }
-
+        
+        // if you just typed one letter more than
+        // the last correctly typed letter
         if (e.target.value.length === last_i + 1
             && last_input.length < e.target.value.length
+            // and you're not advancing
+            // TODO - review this
             && (settings.advance_on_space && e.target.value.slice(-1) !== " ")) {
             recordCharacterOccurence()
         }
-
+        
+        // if you've typed at least 1 incorrect character
+        console.log("last i = ", last_i, e.target.value.charAt(last_i))
         if (e.target.value.length >= last_i + 1
+            // and character typed is incorrect
             && e.target.value.charAt(last_i) !== upcoming_letter
+            // and we're not advancing
             && e.target.value !== current_word + " "
+            // and we've not already recorded the error
             && !error_was_typed) {
-            error_was_typed = true
-            current_word_mistyped = true // recorded in data when word advances
-            let incorrect_type = e.target.value.charAt(last_i)
-            let err_char = (incorrect_type !== " ")
-                ? incorrect_type
-                : "˽"
-            errorLetterDisplay.innerText = err_char
-            // TODO - turn this word salad into functions
-            if (!data["letter_mistypes"].hasOwnProperty(upcoming_letter)) {
-                data["letter_mistypes"][upcoming_letter] = {}
-            }
-            if (!data["letter_mistypes"][upcoming_letter].hasOwnProperty(incorrect_type)) {
-                data["letter_mistypes"][upcoming_letter][incorrect_type] = 1
-            } else {
-                data["letter_mistypes"][upcoming_letter][incorrect_type] += 1
-            }
-            console.log("mistyped char: ", incorrect_type)
+                error_was_typed = true
+                current_word_mistyped = true // recorded in data when word advances
+                let incorrect_type = e.target.value.charAt(last_i)
+                let err_char = (incorrect_type !== " ")
+                    ? incorrect_type
+                    : "˽"
+                errorLetterDisplay.innerText = err_char
+
+                // TODO - turn this word salad into functions
+                if (!data["letter_mistypes"].hasOwnProperty(upcoming_letter)) {
+                    data["letter_mistypes"][upcoming_letter] = {}
+                }
+                if (!data["letter_mistypes"][upcoming_letter].hasOwnProperty(incorrect_type)) {
+                    data["letter_mistypes"][upcoming_letter][incorrect_type] = 1
+                } else {
+                    data["letter_mistypes"][upcoming_letter][incorrect_type] += 1
+                }
+                console.log("mistyped char: ", incorrect_type)
+        // if backspaced over last correct letter
         } else if (e.target.value.length <= last_i) {
             error_was_typed = false
             errorLetterDisplay.innerText = ""
         }
-
 
         if (pauseTimes.length > resumeTimes.length) {
             resumeGame()

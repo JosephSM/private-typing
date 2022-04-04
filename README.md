@@ -9,13 +9,11 @@
 # DONE 7. track accuracy
 # DONE 8. run time tracking on a time interval rather than simply when the user types (maybe have this set as an option that can change later)
 9. spaced repitition mode.
-# DONE 10. Change shade of red to lighter shade
-11. Change shade of green on pause to lighter shade
-12. Move times to sidebar
 13. implement scroll
 14. make statistic page in sidebar
 15. Wrong text is inconsistent because it only does the word
 	and does not do the whitespace after or next words
+16. write tests
 
 text-formatting mode //bold italics underlined
 text-editing mode 
@@ -69,3 +67,6 @@ reset counters at end of game
 enable multiline
 selection test 
 share link to game 
+
+Issues:
+1. last_i must be the first thing set as it represents the state of the last correctly typed letter

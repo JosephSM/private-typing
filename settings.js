@@ -1,23 +1,22 @@
 const wpm_update_options = ["ON_TYPE", "ON_WORD", "TIME_ELAPSE", "ON_CLOCK", "CONSTANT"]
 
 let settings = {
-    quote_collection: "Benjamin Franklin",
-    insert_mode: true,
+    quote_collection: "Benjamin Franklin", //done
     word_length: 5, // done
     speed_and_accuracy_update: "CONSTANT", // done - change "onclock"
     speed_and_accuracy_update_interval: 50, // done
     advance_on_space: true, // done
     show_upcoming_letter: true, // done
     show_countdown: false, //done
-    end_after_countdown: true,
-    end_below_accuracy: false,
-    minimum_accuracy: 80,
+    end_after_countdown: true, // done
+    end_below_accuracy: false, // done
+    minimum_accuracy: 80, //done
     pause_countdown_on_pause: true, // done
     keep_completed_letters: false,
     show_word_history: true, // done
     show_elapsed: true, // done
     show_wpm: true, //done
-    show_accuracy: true,
+    show_accuracy: true, // done
     elapsed_label: "", // done
     show_total_elapsed: false, // done
     pause_timer_between_words: false, // done 
@@ -47,7 +46,6 @@ let settings = {
     // edit mode 
     // diff mode
     // RANDOM IDEA : search engine that accounts for your history 
-    // show_paused: false, // ?
     // show_pause_icon: false,
     // auto_contrast_colors: false , 
     // auto_quote: false,
@@ -78,8 +76,10 @@ let settings = {
     word_spacing: "NORMAL",
     preview_color: "Normal",
     vim_mode: false,
+    insert_mode: true,
     min_wpm: false,
     min_accuracy: false,
     disable_backspace: false,
     show_only_next_letter: false,
+    enable_paste:false
 }
