@@ -6,9 +6,34 @@
     <title>Document</title>
     <link href="https://fonts.googleapis.com/css2?family=Adamina&family=Piazzolla:wght@400;700&family=Prata&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        #stats{
+            height: 400px;
+            width: 80vw;
+            min-width: 600px;
+            background-color: yellow;
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translate(-50%, 0);
+            z-index: 100;
+        }
+    </style>
 </head>
 <body>
-    
+        <button onclick="((e)=>{document.querySelector('#stats').classList.remove('hide')})()">stats</button>  
+        <button>Mode</button>
+        <button>History</button>
+        <button>Settings</button>
+        <button>Snippets</button>
+        <button>VIM</button>
+        <button>AutoComplete</button>
+        <button>Diff</button>
+        <button>Grammars</button>
+        <button>Key Bindings</button>
+        <div id="stats" class="hide">
+            <h1 onclick="(function mf(e){e.parentElement.classList.add('hide')})(this)" style="float:right">X</h1>
+        </div>
 </body>
 <script src="settings.js"></script>
 <script src="quotes.js"></script>

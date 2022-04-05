@@ -1,8 +1,8 @@
 (function the_game() {
-
     // TODO
-    function removeUntypables() {
-        let untypeables = "—"
+    function removeUntypables(str) {
+        return str.replace(/[—]/g, "")
+        .replace(/\s{2,}/g, " ")
     }
 
     function removePunctuation(str) {
@@ -15,8 +15,11 @@
         return words.match(syllableRegex);
     }
 
-    function processQuote(source) {
-        let quote = selectRandomElem(source);
+    function processQuote(source, quote=null) {
+        if(!quote){
+            quote = selectRandomElem(source);
+        }
+        quote = removeUntypables(quote)
 
         if (settings.auto_capitalize) {
             quote = quote.replace(
@@ -177,6 +180,9 @@
         const errorLetterDisplay = document.createElement("h1");
         errorLetterDisplay.setAttribute("id", "errorLetterDisplay");
         errorLetterDisplay.classList.add("counter")
+        const slowAlert = document.createElement("h1");
+        slowAlert.setAttribute("id", "slowAlert");
+        slowAlert.classList.add("counter")
 
         gameContainer.appendChild(typingText);
         gameContainer.appendChild(textPreview);
@@ -193,7 +199,8 @@
             gameHeaderContainer.appendChild(upcomingLetterDisplay);
         if (settings.show_error_letter)
             gameHeaderContainer.appendChild(errorLetterDisplay);
-
+        if (!settings.slow_mode)
+            gameHeaderContainer.appendChild(slowAlert)
 
         const scoreContainer = document.createElement("div");
         scoreContainer.setAttribute("id", "scoreContainer")
@@ -227,6 +234,7 @@
             countdownTimerCounter,
             upcomingLetterDisplay,
             errorLetterDisplay,
+            slowAlert,
             scoreContainer,
             scoreBoard
         ]
@@ -269,7 +277,9 @@
         // or not already paused
         // console.log(pauseTimes)
         // console.log(resumeTimes)
-        if (start && pauseTimes.length === resumeTimes.length) {
+        if (start 
+            && pauseTimes.length === resumeTimes.length
+            && !replay) {
             console.log("pause called " + start)
             if (style)
                 gameContainer.style = "background-color:grey;"
@@ -360,7 +370,7 @@
         console.log(data)
     }
 
-    function resetGame(button = false) {
+    function resetGame(button = false, str=null) {
         data = {
             "letters": {},
             "words": {},
@@ -375,6 +385,7 @@
             clearInterval(speed_update_interval)
         if (time_and_countdown_interval)
             clearInterval(time_and_countdown_interval)
+        typingInput.readOnly = false
         typingInput.value = ""
         speedCounter.innerText = 0;
         accuracyCounter.innerText = "100%";
@@ -386,7 +397,11 @@
         } else {
             quotes = quote_collection["Harry Potter"]
         }
-        quote = processQuote(quotes)
+        if(str){
+            quote = str
+        }else{
+            quote = processQuote(quotes)
+        }
         upcoming_words = quote.trim().split(" ");
         current_word = ""; // advanceWord() sets this to first word in quote
         finished_words = [];
@@ -427,6 +442,7 @@
         }
         console.log("mistyped char: ", err_char)
     }
+
     function recordMistypedWord(word = current_word) {
         if (data["word_mistypes"].hasOwnProperty(word)) {
             data["word_mistypes"][word] += 1
@@ -455,6 +471,7 @@
         countdownTimerCounter,
         upcomingLetterDisplay,
         errorLetterDisplay,
+        slowAlert,
         scoreContainer,
         scoreBoard
     ] = createGameElements();
@@ -527,6 +544,41 @@
         accuracyCounter.innerText = Math.floor(accuracy) + "%"
     }
 
+    function show_replay(){
+        playback = []
+        for(let i = 0; i < data["all_presses"].length; i++){
+            let button = data["all_presses"][i][0]
+            let time = data["all_presses"][i][1]
+            time = (i === 0)
+            ? time - start
+            : time - data["all_presses"][i-1][1]
+            playback.push([button, time])
+        }
+        resetGame(button=false, str=quote)
+        // console.log(playback)
+        last_time = Date.now()
+        replay_interval = setInterval(function(){
+            if (playback.length === 0){
+                clearInterval(replay_interval)
+                return
+            }
+            this_time = Date.now()
+            if ((this_time - last_time) >= playback[0][1]){
+                let btn = playback.shift(playback[0])[0]
+                typingInput.readOnly = true
+                let cv = typingInput.value
+                if(btn.length === 1){
+                    typingInput.value = cv + btn;
+                }else{
+                    num_backspaces = parseInt(btn.split(" ")[0])
+                    console.log("num_backspaces ", num_backspaces)
+                    typingInput.value = cv.substring(0, cv.length - num_backspaces)
+                }
+                typingInput.dispatchEvent(new Event('input', {bubbles:true}))
+                last_time = this_time
+            }
+        }, 30)
+    }
 
     document.body.appendChild(gameContainer);
     document.body.appendChild(scoreContainer);
@@ -548,27 +600,45 @@
         pauseTimes, // list of recorded timestamps of times paused 
         resumeTimes, // list of recorded timestamps of times resumed
         time_of_button_press, // timestamp of last character typed
+        // time_of_last_button_press,
         last_i, // index AFTER last correctly typed character AKA the count of correctly typed letters
         current_word_mistyped, // true when current word been recorded in data as mistyped so as not to re-record 
         last_input, // text of the last state of the input field
         accuracy; // (total-chars-encountered - total-chars-mistyped) / total-chars-encountered * 100
 
+    let playback, last_time;
+    let replay = true;
     resetGame()
     if (settings.pause_on_mouseout) {
         typingInput.addEventListener("focusout", pauseGame)
     }
 
     typingInput.addEventListener("input", function (e) {
+        time_of_button_press = Date.now()
+        // Don't record button press
         if (!settings.insert_mode) {
             e.target.value = last_input
+            return
         }
-        time_of_button_press = Date.now()
+
+        if (settings.slow_mode && speed > settings.speed_ceiling){
+            console.log("Too fast! ", speed)   
+            if (settings.slow_mode) {
+                e.target.value = last_input
+            }
+            slowAlert.innerText = "Slow Down! "
+            return  
+        }else{
+            slowAlert.innerText = ""
+        }
         if (!start) {
             start = time_of_button_press
         }
         if (new_game) {
             //TODO: rename this
-            time_and_countdown_interval = setInterval(timeAndCoundown, 100)
+            // 50ms is fast enough to accurately track a typist typing at 230wpm
+            // 50ms < 1 / ( 230wpm * (5 / 60,000))
+            time_and_countdown_interval = setInterval(timeAndCoundown, 50)
 
             if (settings.show_wpm) {
                 if (settings.speed_and_accuracy_update !== "ON_WORD"
@@ -590,7 +660,7 @@
         } else {
             // record number of letters backspaced via ctrl+backspace 
             let backspace_len = last_input.length - e.target.value.length
-            data.all_presses.push([backspace_len + "<BS>", time_of_button_press])
+            data.all_presses.push([backspace_len + " <BS>", time_of_button_press])
         }
 
         // DO NOT REFERENCE -- last_i -- BEFORE THIS POINT
@@ -655,6 +725,7 @@
         }
         if (e.target.value === current_word + " "
             || (e.target.value === current_word && !settings.advance_on_space)
+            || (settings.advance_with_errors && e.target.value.slice(-1) === " ")
         ) {
             // TODO - turn this word salad into functions
             if (settings.advance_with_errors && e.target.value.slice(-1) === " ") {
@@ -674,9 +745,14 @@
             }
             if (upcoming_words.length === 0) {
                 win();
-                if (settings.auto_restart)
-                    resetGame();
-                else
+                if (settings.auto_restart){
+                    if (replay){
+                        show_replay(e);
+                    }else{
+                        resetGame();
+                    }
+                    replay = !replay
+                }else
                     resetGame(button = true)
             } else {
                 if (settings.pause_timer_between_words) {
