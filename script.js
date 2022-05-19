@@ -278,8 +278,7 @@
         // console.log(pauseTimes)
         // console.log(resumeTimes)
         if (start 
-            && pauseTimes.length === resumeTimes.length
-            && !replay) {
+            && pauseTimes.length === resumeTimes.length) {
             console.log("pause called " + start)
             if (style)
                 gameContainer.style = "background-color:grey;"
@@ -346,11 +345,13 @@
         value.innerText = speed
         tr.appendChild(time)
         tr.appendChild(value)
+        // if(scoreHeader !== null){
         if (!scoreHeader.nextSibling) {
             scoreBoard.appendChild(tr)
         } else {
             scoreBoard.insertBefore(tr, scoreHeader.nextSibling)
         }
+        // }
     }
 
     function advanceWord() {
@@ -545,6 +546,7 @@
     }
 
     function show_replay(){
+        typingInput.removeEventListener("input", mouseOutListener)
         playback = []
         for(let i = 0; i < data["all_presses"].length; i++){
             let button = data["all_presses"][i][0]
@@ -608,12 +610,13 @@
 
     let playback, last_time;
     let replay = true;
+    let mouseOutListener;
     resetGame()
-    if (settings.pause_on_mouseout) {
-        typingInput.addEventListener("focusout", pauseGame)
-    }
-
+    
     typingInput.addEventListener("input", function (e) {
+        if (settings.pause_on_mouseout && replay) {
+            mouseOutListener = typingInput.addEventListener("focusout", pauseGame)
+        }
         time_of_button_press = Date.now()
         // Don't record button press
         if (!settings.insert_mode) {

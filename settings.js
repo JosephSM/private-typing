@@ -1,7 +1,7 @@
 const wpm_update_options = ["ON_TYPE", "ON_WORD", "TIME_ELAPSE", "ON_CLOCK", "CONSTANT"]
 
 let settings = {
-    quote_collection: "Benjamin Franklin", //done
+    quote_collection: "Harry Potter", //done
     word_length: 5, // done
     speed_and_accuracy_update: "CONSTANT", // done - change "onclock"
     speed_and_accuracy_update_interval: 50, // done
@@ -24,9 +24,9 @@ let settings = {
     allow_incorrect_letters: true, // done
     always_type_correctly:false, 
     countdown_time: 30, // done
-    show_preview: true, // done
+    show_preview: false, // done
     show_punctuation: true, // done
-    show_error_letter: true,
+    show_error_letter: false, // done
     show_capitalization: true, // done
     no_spaces: false, // done
     wpm_label: "", // done 
@@ -35,12 +35,9 @@ let settings = {
     auto_capitalize: false, //done
     auto_punctuate: false, //done
     pause_on_mouseout: true, // done
-    preview_length: 3, //done
+    preview_length: 0, //done
     alternate_quoting: true, // quasi-done
     split_syllables_naive: false, // quasi-done
-    slow_mode:false,
-    speed_ceiling: 80, // speed ceiling
-    slow_only_on_error_words: true, 
     // random, disappearing text, moving text, 
     // flashing text
     // insert your own snippets
@@ -49,6 +46,9 @@ let settings = {
     // show_pause_icon: false, // show state
     // auto_contrast_colors: false , 
     // auto_quote: false,
+    speed_ceiling: 80, // speed ceiling
+    slow_only_on_error_words: true, 
+    slow_mode: false, // buggy
     game_type: "NORMAL",
     replay_on_condition: false, // didn't reach a threshold wpm, accuracy etc. 
     win_on_space: true,
@@ -89,23 +89,24 @@ let settings = {
 }
 
 /*
-
-# features to implement #
-
+#finished features
 # DONE 1. if user clicks off the input pause the game and clock
 # DONE 2. track characters that user types incorrectly and which letters they're typing instead
-3. add a mode to allow user to slowly practice the letters that they got wrong
 # DONE 4. visual indication of letters that the user types incorrectly
-5. add voice mode.
 # DONE 6. track speed for individual characters
 # DONE 7. track accuracy
 # DONE 8. run time tracking on a time interval rather than simply when the user types (maybe have this set as an option that can change later)
+
+
+# features to implement #
+3. add a mode to allow user to slowly practice the letters that they got wrong
+5. add voice mode.
 9. spaced repitition mode.
 13. implement scroll
 14. make statistic page in sidebar
 15. Wrong text is inconsistent because it only does the word
 	and does not do the whitespace after or next words
-    16. write tests
+16. write tests
 
 speed graph 
 error graph
@@ -121,11 +122,14 @@ word text-formatting mode //bold italics underlined
 text-editing mode 
 learn mode
 vim mode
+vim mode should detect your slowest motions and recommend keymappings
 slow mode // can only type slowly 
+sudden death mode - lose on error
 vocabulary mode - learn the entire dictionary 
 reading comprehension mode
 maintain speed mode
 debug mode
+QA mode
 anki mode - study while typing
 distraction free on
 enable newlines and textarea
@@ -134,8 +138,7 @@ filter only arrow keys - Dance Dance Revolution
 filter only punctuation
 
 reading levels - practice words at reading level
-questions and answers
-view replay
+view replay // done
 view game history
 smooth caret
 show caret in text
