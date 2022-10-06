@@ -13,6 +13,7 @@ let settings = {
   speed_and_accuracy_update_interval: 50, // done
   advance_on_space: true, // done
   show_upcoming_letter: true, // done
+  //?
   show_countdown: false, //done
   end_after_countdown: true, // done
   end_below_accuracy: false, // done
@@ -32,7 +33,7 @@ let settings = {
   countdown_time: 30, // done
   show_preview: false, // done
   show_punctuation: true, // done
-  show_error_letter: false, // done
+  show_error_letter: true, // done
   show_capitalization: true, // done
   no_spaces: false, // done
   wpm_label: "", // done
