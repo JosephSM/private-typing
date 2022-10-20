@@ -45,6 +45,7 @@ function quote_mode() {
     // console.log("advancing word", current_word);
     finished_words.push(current_word);
     if (upcoming_words.length > 0) {
+      console.log("ADV -NOT-DONE-");
       current_word = upcoming_words.shift();
       // Is this necessary?
       let current_word_unpunct = removePunctuation(current_word);
@@ -58,12 +59,15 @@ function quote_mode() {
         pauseGame();
       }
     } else {
-      playback = createPlayback();
+      console.log("ADV --DONE--");
       if (settings.replay) {
         if (replay) {
+          console.log("REPLAYING");
+          playback = createPlayback();
           recordScore();
           show_replay();
         } else {
+          console.log("NO-REPLAY");
           document.querySelectorAll(".option").forEach(function (e) {
             e.classList.remove("hide");
           });
@@ -71,6 +75,7 @@ function quote_mode() {
         }
         replay = !replay;
       } else {
+        playback = createPlayback();
         recordScore();
         resetGame();
       }
@@ -174,6 +179,7 @@ function quote_mode() {
   }
 
   function show_replay() {
+    console.log("--SHOWING replay--");
     typingInput.removeEventListener("input", mouseOutPauseListener);
     typingInput.readOnly = true;
     // playback = createPlayback();
@@ -186,8 +192,10 @@ function quote_mode() {
     resetGame((str = quote), (process = false));
 
     last_time = null;
+    console.log("replay interval created");
     replay_interval = setInterval(function () {
       if (playback.length === 0) {
+        console.log("INTERVAL DESTROYED");
         clearInterval(replay_interval);
         return;
       }
