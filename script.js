@@ -275,10 +275,10 @@ function quote_mode() {
     resetGame((str = source_quote));
   });
 
-  keysOption.addEventListener("click", function () {
-    div = createOverlay("Profile");
-    document.body.appendChild(div);
-  });
+  // keysOption.addEventListener("click", function () {
+  //   div = createOverlay("Profile");
+  //   document.body.appendChild(div);
+  // });
 
   function updateSettingsView(table) {
     table.innerHTML = "";

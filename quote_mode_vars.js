@@ -53,7 +53,7 @@ const [
   puncsOption,
   // spaceOption,
   syllablesOption,
-  keysOption,
+  // keysOption,
   settingsOption,
 ] = createGameElements();
 

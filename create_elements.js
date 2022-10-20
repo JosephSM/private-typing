@@ -82,11 +82,11 @@ function createGameElements() {
   syllablesOption.setAttribute("id", "syllablesOption");
   gameHeaderContainer.appendChild(syllablesOption);
 
-  const keysOption = document.createElement("button");
-  keysOption.innerHTML = "Profile";
-  keysOption.classList.add("option");
-  keysOption.setAttribute("id", "keysOption");
-  gameHeaderContainer.appendChild(keysOption);
+  // const keysOption = document.createElement("button");
+  // keysOption.innerHTML = "Profile";
+  // keysOption.classList.add("option");
+  // keysOption.setAttribute("id", "keysOption");
+  // gameHeaderContainer.appendChild(keysOption);
 
   const settingsOption = document.createElement("button");
   settingsOption.innerHTML = "Settings";
@@ -151,7 +151,7 @@ function createGameElements() {
     puncsOption,
     // spaceOption,
     syllablesOption,
-    keysOption,
+    // keysOption,
     settingsOption,
   ];
 }
