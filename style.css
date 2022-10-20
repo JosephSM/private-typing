@@ -3,13 +3,76 @@
     padding: 0px;
     margin: 0px;
     font-family: 'Share Tech Mono', monospace;
+    /* border: 1px solid black; */
 }
+
 div{
     position:relative;
     margin: 0 auto;
-    padding: 45px;
+    padding: 25px;
     max-width: 750px;
 }
+
+
+.overlay{
+    background-color: white;
+    /* position: absolute; */
+    margin: 0 auto;
+    /* margin-top: -250px; */
+    /* transform: translate(-50%, -50%); */
+    width:700px;
+    min-height:400px;
+    z-index:1000;
+    border:1px solid grey;
+    border-radius: 2px;
+    box-shadow: black 1px 1px 10px;
+}
+
+
+.overlay table, select, input{
+    border: solid 1px black;
+    display:block;
+    margin:0 auto;
+    width:80%;
+    padding:30px;
+}
+
+
+.ovarlay table *{
+    text-align:center;
+}
+
+.overlay h3{
+    display: inline-block;
+}
+
+.overlay .close {
+    float:right;
+}
+
+#gameHeader {
+    padding:0px;
+    height: 80px;
+}
+
+#gameHeader .option{
+    float:left;
+    padding:1px 8px;
+    margin-right:10px;
+    border-radius: 3px;
+    border-width: 1px;
+    font-size:20px;
+    font-weight: bold;
+}
+
+#gameHeader .counter{
+    float:right;
+    margin-left: 15px;
+    /* position: absolute;
+    top: 10px;
+    right: 10px; */
+}
+
 #game .liveText{
     text-decoration: underline;
 }
@@ -48,19 +111,13 @@ div{
     padding:0px 5px;
 }
 
-#game .counter{
-    float:right;
-    margin-left: 15px;
-    /* position: absolute;
-    top: 10px;
-    right: 10px; */
-}
 
 
-#scoreContainer #scoreHeader th, td{
-    padding: 0px 20px;
-    font-size: 30px;
-}
+
+/* #scoreContainer #scoreHeader th, td{
+    /* padding: 0px 20px; */
+    /* font-size: 30px; */
+} */
 
 .dialog {
     /* display:none, */

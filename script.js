@@ -1,331 +1,38 @@
-(function the_game() {
+function quote_mode() {
   // TODO
-  function removeUntypables(str) {
-    return str.replace(/[—]/g, "").replace(/\s{2,}/g, " ");
-  }
 
-  function removePunctuation(str) {
-    return str
-      .replace(/[.,'\/#!?$%\^&\*;:{}=—\-_`~()]/g, "")
-      .replace(/\s{2,}/g, " ");
-  }
+  // function win() {
+  //   // addScoreRow();
+  //   recordScore();
+  // }
 
-  function syllabify(words) {
-    const syllableRegex =
-      /[^aeiouy]*[aeiouy]+(?:[^aeiouy]*$|[^aeiouy](?=[^aeiouy]))?/gi;
-    return words.match(syllableRegex);
-  }
+  // function checkTime(i) {
+  //   if (i < 10) {
+  //     i = "0" + i;
+  //   }
+  //   return i;
+  // }
 
-  function processQuote(source, quote = null) {
-    if (!quote) {
-      quote = selectRandomElem(source);
-    }
-    quote = removeUntypables(quote);
-
-    if (settings.auto_capitalize) {
-      quote = quote.replace(/\w\S*/g, function (txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      });
-    }
-
-    if (settings.auto_punctuate) {
-      let fin = [];
-      let words = removePunctuation(quote).split(" ");
-      let numOps = "#$+%~=*^.><-";
-      let pref = "@#&*/-\\";
-      let suf = ":.;,?!";
-      let wordOps = suf + pref;
-      let pairs = {
-        "(": ")",
-        "[": "]",
-        "{": "}",
-        "<": ">",
-        '"': '"',
-        "'": "'",
-        "`": "`",
-      };
-      if (settings.alternate_quoting) {
-        wordOps += Object.keys(pairs).join();
-      }
-      let isWord = false;
-      for (let word of words) {
-        let op;
-        if (isNaN(parseInt(word))) {
-          isWord = true;
-          op = wordOps[Math.floor(Math.random() * wordOps.length)];
-        } else {
-          op = numOps[Math.floor(Math.random() * numOps.length)];
-        }
-        let newToken;
-        if (isWord) {
-          if (pref.includes(op)) {
-            newToken = op + word;
-          } else if (suf.includes(op)) {
-            newToken = word + op;
-          } else {
-            newToken = op + word + pairs[op];
-          }
-        } else {
-          newToken = op === "%" ? word + op : op + word;
-        }
-        fin.push(newToken);
-      }
-      quote = fin.join(" ");
-    }
-
-    if (settings.split_syllables_naive) {
-      quote = quote
-        .split(" ")
-        .map(syllabify)
-        .map((x) => (x === null ? "" : x.join(" ")))
-        .join(" ");
-    }
-
-    if (!settings.show_punctuation) {
-      quote = removePunctuation(quote);
-    }
-
-    if (!settings.show_capitalization) {
-      quote = quote.toLowerCase();
-    }
-
-    if (settings.no_spaces) {
-      // console.log(quote.split(" "));
-      quote = quote.split(" ").join("");
-    }
-
-    return quote.trim();
-  }
-
-  function createLiveWordElement() {
-    const liveContainer = document.createElement("span");
-    liveContainer.setAttribute("class", "liveContainer");
-
-    const liveText = document.createElement("span");
-    liveText.setAttribute("class", "liveText");
-
-    const rightText = document.createElement("span");
-    rightText.setAttribute("class", "rightText");
-
-    const wrongText = document.createElement("span");
-    wrongText.setAttribute("class", "wrongText");
-
-    const restText = document.createElement("span");
-    restText.setAttribute("class", "restText");
-
-    liveContainer.appendChild(document.createTextNode(" "));
-    liveText.appendChild(rightText);
-    liveText.appendChild(wrongText);
-    liveText.appendChild(restText);
-    liveContainer.appendChild(liveText);
-    liveContainer.appendChild(document.createTextNode(" "));
-    return liveContainer;
-  }
-
-  function createGameElements() {
-    const gameContainer = document.createElement("div");
-    gameContainer.setAttribute("id", "game");
-    const gameHeaderContainer = document.createElement("div");
-    gameHeaderContainer.setAttribute("id", "gameHeader");
-    gameContainer.appendChild(gameHeaderContainer);
-    const typingText = document.createElement("p");
-    typingText.setAttribute("id", "typingText");
-
-    const completedText = document.createElement("span");
-    completedText.setAttribute("id", "completedText");
-
-    const liveContainer = createLiveWordElement();
-
-    const upcomingText = document.createElement("span");
-    upcomingText.setAttribute("id", "upcomingText");
-
-    typingText.appendChild(completedText);
-    typingText.appendChild(liveContainer);
-    typingText.appendChild(upcomingText);
-
-    const upcomingPreview = document.createElement("span");
-    upcomingPreview.setAttribute("id", "upcomingPreview");
-    const textPreview = document.createElement("p");
-    if (settings.show_preview) {
-      const livePreviewContainer = createLiveWordElement();
-      textPreview.appendChild(livePreviewContainer);
-      textPreview.setAttribute("id", "textPreview");
-      textPreview.appendChild(upcomingPreview);
-    }
-
-    const typingInput = document.createElement("input");
-    typingInput.setAttribute("id", "typingInput");
-    typingInput.setAttribute("type", "text");
-    const speedCounter = document.createElement("h1");
-    speedCounter.setAttribute("id", "speedCounter");
-    speedCounter.classList.add("counter");
-    const accuracyCounter = document.createElement("h1");
-    accuracyCounter.setAttribute("id", "accuracyCounter");
-    accuracyCounter.classList.add("counter");
-    const elapsedTimeCounter = document.createElement("h1");
-    elapsedTimeCounter.setAttribute("id", "elapsedTimeCounter");
-    elapsedTimeCounter.classList.add("counter");
-    const countdownTimerCounter = document.createElement("h1");
-    countdownTimerCounter.setAttribute("id", "countdownTimerCounter");
-    countdownTimerCounter.classList.add("counter");
-    const upcomingLetterDisplay = document.createElement("h1");
-    upcomingLetterDisplay.setAttribute("id", "upcomingLetterDisplay");
-    upcomingLetterDisplay.classList.add("counter");
-    const errorLetterDisplay = document.createElement("h1");
-    errorLetterDisplay.setAttribute("id", "errorLetterDisplay");
-    errorLetterDisplay.classList.add("counter");
-    const slowAlert = document.createElement("h1");
-    slowAlert.setAttribute("id", "slowAlert");
-    slowAlert.classList.add("counter");
-
-    gameContainer.appendChild(typingText);
-    gameContainer.appendChild(textPreview);
-    gameContainer.appendChild(typingInput);
-    if (settings.show_countdown)
-      gameHeaderContainer.appendChild(countdownTimerCounter);
-    if (settings.show_elapsed || settings.show_total_elapsed)
-      gameHeaderContainer.appendChild(elapsedTimeCounter);
-    if (settings.show_wpm) gameHeaderContainer.appendChild(speedCounter);
-    if (settings.show_accuracy)
-      gameHeaderContainer.appendChild(accuracyCounter);
-    if (settings.show_upcoming_letter)
-      gameHeaderContainer.appendChild(upcomingLetterDisplay);
-    if (settings.show_error_letter)
-      gameHeaderContainer.appendChild(errorLetterDisplay);
-    if (!settings.slow_mode) gameHeaderContainer.appendChild(slowAlert);
-
-    const scoreContainer = document.createElement("div");
-    scoreContainer.setAttribute("id", "scoreContainer");
-    const scoreBoard = document.createElement("table");
-    scoreBoard.setAttribute("id", "scoreBoard");
-    scoreContainer.appendChild(scoreBoard);
-    const scoreHeader = document.createElement("tr");
-    scoreHeader.setAttribute("id", "scoreHeader");
-    scoreBoard.appendChild(scoreHeader);
-    const scoreTime = document.createElement("th");
-    scoreTime.setAttribute("id", "scoreTime");
-    scoreTime.innerText = "Time";
-    scoreHeader.appendChild(scoreTime);
-    const scoreValue = document.createElement("th");
-    scoreValue.setAttribute("id", "scoreValue");
-    scoreValue.innerText = "Score";
-    scoreHeader.appendChild(scoreValue);
-
-    return [
-      gameContainer,
-      gameHeaderContainer,
-      typingText,
-      completedText,
-      upcomingPreview,
-      upcomingText,
-      textPreview,
-      typingInput,
-      elapsedTimeCounter,
-      speedCounter,
-      accuracyCounter,
-      countdownTimerCounter,
-      upcomingLetterDisplay,
-      errorLetterDisplay,
-      slowAlert,
-      scoreContainer,
-      scoreBoard,
-    ];
-  }
-
-  function win() {
-    addScoreRow();
-  }
-
-  function createDialog(name, heading = "Heading") {
-    const Dialog = document.createElement("div");
-    Dialog.setAttribute("id", name + "Dialog");
-    Dialog.setAttribute("class", "dialog");
-    const Heading = document.createElement("h1");
-    Heading.setAttribute("id", name + "Heading");
-    Heading.innerText = heading;
-    Dialog.appendChild(Heading);
-
-    const close = document.createElement("h1");
-    close.setAttribute("class", "dialogClose");
-    close.innerText = "X";
-    close.onclick = function () {
-      Dialog.remove();
-    };
-    Dialog.appendChild(close);
-
-    for (let i = 2; i < arguments.length; i += 2) {
-      const button = document.createElement("button");
-      button.setAttribute("id", name + "Button" + i / 2);
-      button.innerText = arguments[i];
-      button.onclick = arguments[i + 1];
-      Dialog.appendChild(button);
-    }
-    document.body.appendChild(Dialog);
-    return Dialog;
-  }
-
-  function pauseGame(style = true) {
-    // only pause a game if it has started
-    // or not already paused
-    // console.log(pauseTimes)
-    // console.log(resumeTimes)
-    if (start && pauseTimes.length === resumeTimes.length) {
-      console.log("pause called " + start);
-      if (style) gameContainer.style = "background-color:grey;";
-      pauseTimes.push(Date.now());
-    } else {
-      console.log("ERROR: game paused without having been started");
-    }
-  }
-
-  function resumeGame() {
-    if (start && pauseTimes.length > resumeTimes.length) {
-      gameContainer.style = "background-color:white;";
-      resumeTimes.push(Date.now());
-    }
-  }
-
-  function totalTimePaused() {
-    let totalTimePaused = 0;
-    let resumetime;
-    for (let i = 0; i < pauseTimes.length; i++) {
-      resumetime = resumeTimes[i] || current_time;
-      totalTimePaused += resumetime - pauseTimes[i];
-    }
-    return totalTimePaused;
-  }
-
-  function checkTime(i) {
-    if (i < 10) {
-      i = "0" + i;
-    }
-    return i;
-  }
-
-  function selectRandomElem(items) {
-    return items[Math.floor(Math.random() * items.length)];
-  }
-
-  function addScoreRow() {
-    let tr = document.createElement("tr");
-    let time = document.createElement("td");
-    let dt = new Date();
-    let hrs = dt.getHours() % 12;
-    let mins = checkTime(dt.getMinutes());
-    let secs = checkTime(dt.getSeconds());
-    time.innerText = hrs + ":" + mins + ":" + secs;
-    let value = document.createElement("td");
-    value.innerText = speed;
-    tr.appendChild(time);
-    tr.appendChild(value);
-    // if(scoreHeader !== null){
-    if (!scoreHeader.nextSibling) {
-      scoreBoard.appendChild(tr);
-    } else {
-      scoreBoard.insertBefore(tr, scoreHeader.nextSibling);
-    }
-    // }
-  }
+  // function addScoreRow() {
+  //   let tr = document.createElement("tr");
+  //   let time = document.createElement("td");
+  //   let dt = new Date();
+  //   let hrs = dt.getHours() % 12;
+  //   let mins = checkTime(dt.getMinutes());
+  //   let secs = checkTime(dt.getSeconds());
+  //   time.innerText = hrs + ":" + mins + ":" + secs;
+  //   let value = document.createElement("td");
+  //   value.innerText = speed;
+  //   tr.appendChild(time);
+  //   tr.appendChild(value);
+  //   // if(scoreHeader !== null){
+  //   if (!scoreHeader.nextSibling) {
+  //     scoreBoard.appendChild(tr);
+  //   } else {
+  //     scoreBoard.insertBefore(tr, scoreHeader.nextSibling);
+  //   }
+  //   // }
+  // }
 
   function advanceWord() {
     if (settings.show_wpm && settings.speed_and_accuracy_update === "ON_WORD") {
@@ -335,37 +42,42 @@
       recordMistypedWord((word = current_word));
       is_word_mistyped = false;
     }
-    console.log("advancing word", current_word);
+    // console.log("advancing word", current_word);
     finished_words.push(current_word);
-    if (upcoming_words.length === 0) {
-      win();
-      if (settings.auto_restart) {
-        if (replay) {
-          show_replay();
-        } else {
-          resetGame();
-        }
-        replay = !replay;
-      } else resetGame((button = true));
-    } else {
+    if (upcoming_words.length > 0) {
       current_word = upcoming_words.shift();
+      // Is this necessary?
       let current_word_unpunct = removePunctuation(current_word);
-      if (data["words"].hasOwnProperty(current_word_unpunct)) {
-        data["words"][current_word_unpunct] += 1;
-      } else {
-        data["words"][current_word_unpunct] = 1;
-      }
-      console.log(data);
+      //-------------------
+      recordWord(current_word_unpunct);
+      // console.log(data);
       correct_letter_length = 0;
       updateUpcomingLetter();
       updateGameDisplay();
       if (settings.pause_timer_between_words) {
         pauseGame();
       }
+    } else {
+      playback = createPlayback();
+      if (settings.replay) {
+        if (replay) {
+          recordScore();
+          show_replay();
+        } else {
+          document.querySelectorAll(".option").forEach(function (e) {
+            e.classList.remove("hide");
+          });
+          resetGame();
+        }
+        replay = !replay;
+      } else {
+        recordScore();
+        resetGame();
+      }
     }
   }
 
-  function resetGame(button = false, str = null) {
+  function resetGame(str = null, process = true) {
     data = {
       letters: {},
       total_letter_count: 0,
@@ -375,9 +87,6 @@
       letter_mistypes: {},
       all_presses: [],
     };
-    if (button) {
-      createDialog("play-again", "Play Again?", "Play");
-    }
 
     //reset time interval
     interval && clearInterval(interval);
@@ -397,15 +106,14 @@
     } else {
       quotes = quote_collection["Harry Potter"];
     }
-    if (str) {
-      quote = str;
-    } else {
-      quote = processQuote(quotes);
-    }
+
+    source_quote = str || selectRandomElem(quotes);
+    quote = !process ? source_quote : processQuote(source_quote);
 
     //initialize time state
     current_time = null;
     speed = 0;
+    resumeGame();
     pauseTimes = [];
     resumeTimes = [];
 
@@ -421,40 +129,6 @@
     updateGameDisplay();
     typingInput.focus();
     start = settings.auto_restart_clock ? Date.now() : null;
-  }
-
-  function recordCharacterOccurence(character = upcoming_letter) {
-    console.log("recording ", character);
-    data.total_letter_count += 1;
-    if (data["letters"].hasOwnProperty(character)) {
-      data["letters"][character] += 1;
-    } else {
-      data["letters"][character] = 1;
-    }
-  }
-
-  function recordMistypedCharacter(
-    character = upcoming_letter,
-    err_char = err_char
-  ) {
-    if (!data["letter_mistypes"].hasOwnProperty(character)) {
-      data["letter_mistypes"][character] = {};
-    }
-    if (!data["letter_mistypes"][character].hasOwnProperty(err_char)) {
-      data["letter_mistypes"][character][err_char] = 1;
-    } else {
-      data["letter_mistypes"][character][err_char] += 1;
-    }
-    data.mistype_count += 1;
-    console.log("mistyped char: ", err_char);
-  }
-
-  function recordMistypedWord(word = current_word) {
-    if (data["word_mistypes"].hasOwnProperty(word)) {
-      data["word_mistypes"][word] += 1;
-    } else {
-      data["word_mistypes"][word] = 1;
-    }
   }
 
   function updateUpcomingLetter() {
@@ -488,18 +162,29 @@
       .join(" ");
   }
 
-  function show_replay() {
-    typingInput.removeEventListener("input", mouseOutPauseListener);
-    typingInput.readOnly = true;
-    playback = [];
+  function createPlayback() {
+    const playback = [];
     for (let i = 0; i < data["all_presses"].length; i++) {
       let button = data["all_presses"][i][0];
       let time = data["all_presses"][i][1];
       time = i === 0 ? time - start : time - data["all_presses"][i - 1][1];
       playback.push([button, time]);
     }
-    resetGame((button = false), (str = quote));
-    // console.log(playback)
+    return playback;
+  }
+
+  function show_replay() {
+    typingInput.removeEventListener("input", mouseOutPauseListener);
+    typingInput.readOnly = true;
+    // playback = createPlayback();
+    // hide buttons which can modify the state during the replay
+    document.querySelectorAll(".option").forEach(function (e) {
+      e.classList.add("hide");
+    });
+    // reset the game using the quote (as opposed to source_quote)
+    // but don't process it again..
+    resetGame((str = quote), (process = false));
+
     last_time = null;
     replay_interval = setInterval(function () {
       if (playback.length === 0) {
@@ -518,7 +203,7 @@
           typingInput.value = cv + btn;
         } else {
           num_backspaces = parseInt(btn.split(" ")[0]);
-          console.log("num_backspaces ", num_backspaces);
+          // console.log("num_backspaces ", num_backspaces);
           typingInput.value = cv.substring(0, cv.length - num_backspaces);
         }
         typingInput.dispatchEvent(new Event("input", { bubbles: true }));
@@ -540,84 +225,6 @@
     return 0;
   }
 
-  function recordLetterPress(e) {
-    if (last_input.length < e.target.value.length) {
-      data.all_presses.push([
-        e.target.value.slice(last_input.length),
-        time_of_button_press,
-      ]);
-    } else {
-      // record number of letters backspaced via ctrl+backspace
-      let backspace_len = last_input.length - e.target.value.length;
-      data.all_presses.push([backspace_len + " <BS>", time_of_button_press]);
-    }
-  }
-
-  function recordSkippedChars() {
-    let skipped_chars = current_word.slice(correct_letter_length + 1).split("");
-    console.log("skipped chars: ", skipped_chars);
-    if (skipped_chars !== []) {
-      for (let char of skipped_chars) {
-        recordCharacterOccurence(char);
-        recordMistypedCharacter(char, (err_char = "<blank>"));
-      }
-    }
-  }
-
-  function timeInterval() {
-    current_time = Date.now();
-    // total_time_paused()
-    time_paused = totalTimePaused();
-    // updateElapsedTime();
-    elapsed_time = current_time - start;
-    elapsed_play_time = elapsed_time - time_paused;
-    // updateCountdown();
-    countdown_time = settings.countdown_time * 1000 - elapsed_time;
-    countdown_play_time = countdown_time + time_paused;
-    // updateSpeed();
-    total_letters_and_spaces =
-      finished_words.join(" ").length + correct_letter_length;
-    speed = total_letters_and_spaces / 5 / (elapsed_play_time / 60);
-    // updateAccuracy();
-    char_count = data.total_letter_count;
-    accuracy = (char_count - data.mistype_count) / char_count;
-
-    // console.log(
-    //   countdown_time,
-    //   countdown_play_time,
-    //   elapsed_time,
-    //   elapsed_play_time,
-    //   speed,
-    //   accuracy
-    // );
-    updateTimeDisplay();
-  }
-
-  function updateTimeDisplay() {
-    //   if (settings.show_wpm) {
-    //     if (!["ON_WORD", "ON_TYPE"].includes(speedSetting)) {
-    //       let interval = settings.speed_and_accuracy_update_interval || 100;
-    //       if (speedSetting === "ON_CLOCK") {
-    //         interval = 1000;
-    //       } else if (speedSetting === "CONSTANT") {
-    //         interval = 100;
-    //       }
-    // if (settings.show_countdown) {
-    //     if (settings.pause_countdown_on_pause) {
-    console.log(countdown_time);
-    countdownTimerCounter.innerText = "countdown_time";
-    // if (settings.end_after_countdown && countdown_time <= 0)
-    // resetGame();
-    // if (settings.show_elapsed) {
-    // if (settings.show_total_elapsed) {
-    elapsedTimeCounter.innerText = Math.floor(elapsed_play_time / 1000);
-    speedCounter.innerText = Math.floor(speed * 1000);
-    // if (settings.end_below_accuracy && accuracy < minacc) {
-    //     resetGame();
-    //   }
-    accuracyCounter.innerText = Math.floor(100 * accuracy);
-  }
-
   function todo() {
     // Don't record button press
     // if (!settings.insert_mode) {
@@ -637,61 +244,89 @@
     // }
   }
 
-  const [
-    gameContainer,
-    gameHeaderContainer,
-    typingText,
-    completedText,
-    upcomingPreview,
-    upcomingText,
-    textPreview,
-    typingInput,
-    elapsedTimeCounter,
-    speedCounter,
-    accuracyCounter,
-    countdownTimerCounter,
-    upcomingLetterDisplay,
-    errorLetterDisplay,
-    slowAlert,
-    scoreContainer,
-    scoreBoard,
-  ] = createGameElements();
-
   document.body.appendChild(gameContainer);
-  document.body.appendChild(scoreContainer);
+  // document.body.appendChild(scoreContainer);
 
-  let quotes, // list of quotes chosen by game
-    quote, // text to practice typing on
-    data, // object containing letter and word frequencies, errors and speed
-    // --- WORD ---
-    upcoming_letter, // next letter required to type
-    current_word, // current word to type correctly
-    upcoming_words, // list of upcoming words in quote, seperated by spaces
-    finished_words, // words completed (or skipped)
-    correct_letter_length, // index AFTER last correctly typed character AKA the count of correctly typed letters
-    is_word_mistyped, // true when current word been recorded in data as mistyped so as not to re-record
-    last_input, // text of the last state of the input field
-    // --- TIME ---
-    time_of_button_press, // timestamp of last button pressed into input
-    start, // timestamp of the game start
-    current_time,
-    elapsed_time,
-    countdown_time,
-    interval,
-    // --- PLAYTIME  ---
-    elapsed_play_time,
-    countdown_play_time,
-    // PAUSE AND RESUME
-    pauseTimes, // list of recorded timestamps of times paused
-    resumeTimes, // list of recorded timestamps of times resumed
-    time_paused, // total time paused in  ms
-    mouseOutPauseListener, // pause when input not selected
-    // --- SPEED AND ACCURACY
-    speed,
-    accuracy;
+  capsOption.addEventListener("click", function () {
+    settings.auto_capitalize = !settings.auto_capitalize;
+    resetGame((str = source_quote));
+  });
 
-  let playback, last_time;
-  let replay = true;
+  puncsOption.addEventListener("click", function () {
+    settings.auto_punctuate = !settings.auto_punctuate;
+    resetGame((str = source_quote));
+  });
+
+  // spaceOption.addEventListener("click", function () {
+  //   settings.no_spaces = !settings.no_spaces;
+  //   resetGame((str = source_quote));
+  // });
+
+  syllablesOption.addEventListener("click", function () {
+    settings.split_syllables_naive = !settings.split_syllables_naive;
+    resetGame((str = source_quote));
+  });
+
+  keysOption.addEventListener("click", function () {
+    div = createOverlay("Profile");
+    document.body.appendChild(div);
+  });
+
+  function updateSettingsView(table) {
+    table.innerHTML = "";
+    headrow = document.createElement("tr");
+    th1 = document.createElement("th");
+    th1.innerText = "Setting";
+    th2 = document.createElement("th");
+    th2.innerText = "Value";
+    headrow.append(th1, th2);
+    table.append(headrow);
+    for (var key of Object.keys(settings)) {
+      const row = document.createElement("tr");
+      const k = document.createElement("td");
+      k.innerText = key;
+      const v = document.createElement("td");
+      v.innerText = settings[key];
+      row.append(k, v);
+      table.append(row);
+      console.log(key, settings[key]);
+    }
+  }
+
+  settingsOption.addEventListener("click", function () {
+    div = createOverlay("Settings");
+    select = document.createElement("select");
+    for (var key of Object.keys(settings)) {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = key;
+      select.append(opt);
+    }
+    inp = document.createElement("input");
+    table = document.createElement("table");
+    select.addEventListener("change", function (e) {
+      inp.value = settings[e.target.value];
+    });
+    inp.addEventListener("keypress", function (e) {
+      console.log(e.code || e.key);
+      if (!e) e = window.event;
+      var keyCode = e.code || e.key;
+      if (keyCode == "Enter") {
+        console.log("ENTER!!!!!!!!");
+        settings[select.value] = e.target.value;
+        updateSettingsView(table);
+        console.log(settings);
+        resetGame();
+        inp.focus();
+        // div.remove();
+        return false;
+      }
+    });
+    updateSettingsView(table);
+    inp.value = settings[select.value];
+    div.append(select, inp, table);
+    document.body.appendChild(div);
+  });
   resetGame();
 
   if (settings.pause_on_mouseout) {
@@ -755,19 +390,23 @@
     // ------ UPDATE -------
     // upcoming letter & GameDisplay
 
-    let keep_completed_letters =
+    let completed_but_backspaced =
       settings.keep_completed_letters &&
       // backspaced over correctly typed chars
-      e.target.value.length < correct_letter_length &&
-      // ...and are now typing (not backspacing)
-      e.target.value.length > last_input.length;
+      e.target.value.length < correct_letter_length;
+
+    // ...and are now typing (not backspacing)
+    let now_typing = e.target.value.length > last_input.length;
 
     if (
-      keep_completed_letters ||
-      (!settings.allow_incorrect_letters &&
-        e.target.value.slice(-1) !== upcoming_letter)
+      !settings.allow_incorrect_letters &&
+      e.target.value.slice(-1) !== upcoming_letter
     ) {
       e.target.value = current_word.slice(0, correct_letter_length);
+    } else if (completed_but_backspaced) {
+      if (now_typing)
+        e.target.value = current_word.slice(0, correct_letter_length);
+      // else (maintain letter length)
     } else {
       correct_letter_length = get_correct_letter_length(e);
       updateUpcomingLetter();
@@ -804,4 +443,6 @@
 
     last_input = e.target.value;
   });
-})();
+}
+
+quote_mode();
