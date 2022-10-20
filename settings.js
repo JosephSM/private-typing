@@ -53,7 +53,7 @@ let settings = {
   countdown_time: 30, // done
   wpm_label: "", // done
   // auto
-  replay: false, // done
+  replay: true, // done
   auto_restart_clock: false, // done
 
   // random, disappearing text, moving text,
