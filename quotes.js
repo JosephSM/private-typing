@@ -99,3 +99,5 @@ quote_collection["Benjamin Franklin"] = [
     "Be neither silly, nor cunning, but wise.",
     "They who have nothing to be troubled at, will be troubled at nothing."
 ]
+
+quote_collection["Rex"] = ["Have a great rest of your day"]
